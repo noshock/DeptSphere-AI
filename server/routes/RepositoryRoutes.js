@@ -7,6 +7,9 @@ const {
     uploadFile,
     getAllFiles,
     deleteFile,
+    updateFile,
+    searchFiles,
+    filterBySemester,
 } = require("../controllers/RepositoryController");
 
 router.post(
@@ -16,6 +19,9 @@ router.post(
     uploadFile
 );
 
+router.get("/search", authMiddleware, searchFiles);
+router.get("/filter/semester", authMiddleware, filterBySemester);
 router.get("/", authMiddleware, getAllFiles);
 router.delete("/:id", authMiddleware, deleteFile);
+router.put("/:id", authMiddleware, updateFile);
 module.exports = router;

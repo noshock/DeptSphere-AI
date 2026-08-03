@@ -86,8 +86,81 @@ const deleteFile = async (req, res) => {
     }
 };
 
+const updateFile = async (req, res) => {
+    try {
+        const { title, description, subject, department, semester, category } = req.body;
+
+        const repository = await Repository.findById(req.params.id);
+
+        if (!repository) {
+            return res.status(404).json({
+                message: "File not found",
+            });
+        }
+
+        repository.title = title || repository.title;
+        repository.description = description || repository.description;
+        repository.subject = subject || repository.subject;
+        repository.department = department || repository.department;
+        repository.semester = semester || repository.semester;
+        repository.category = category || repository.category;
+
+        await repository.save();
+
+        res.status(200).json({
+            message: "Repository updated successfully",
+            repository,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+const searchFiles = async (req, res) => {
+    try {
+        const { title } = req.query;
+
+        const files = await Repository.find({
+            title: {
+                $regex: title,
+                $options: "i",
+            },
+        }).populate("uploadedBy", "name email");
+
+        res.status(200).json(files);
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+const filterBySemester = async (req, res) => {
+    try {
+        const { semester } = req.query;
+
+        const files = await Repository.find({
+            semester,
+        }).populate("uploadedBy", "name email");
+
+        res.status(200).json(files);
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
 module.exports = {
     uploadFile,
     getAllFiles,
     deleteFile,
+    updateFile,
+    searchFiles,
+    filterBySemester,
 };
