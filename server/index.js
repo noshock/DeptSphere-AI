@@ -1,10 +1,13 @@
 const express = require("express");
+const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const facultyRoutes = require("./routes/facultyRoutes");
 const repositoryRoutes = require("./routes/RepositoryRoutes");
 
 const app = express();
+
+app.use(cors());
 
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
