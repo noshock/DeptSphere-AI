@@ -27,7 +27,11 @@ const Login = () => {
 
             alert("Login Successful");
 
-            navigate("/dashboard");
+            if (response.data.faculty.role === "admin") {
+                  navigate("/admin-dashboard");
+                } else {
+                   navigate("/dashboard");
+                }
 
         } catch (error) {
             console.log(error);

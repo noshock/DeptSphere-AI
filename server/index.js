@@ -6,6 +6,7 @@ const facultyRoutes = require("./routes/facultyRoutes");
 const repositoryRoutes = require("./routes/RepositoryRoutes");
 
 const app = express();
+app.use("/uploads", express.static("uploads"));
 
 app.use(cors());
 
