@@ -4,6 +4,7 @@ import Dashboard from "../pages/Dashboard";
 import Repository from "../pages/Repository";
 import AdminDashboard from "../pages/AdminDashboard";
 import FacultyManagement from "../pages/FacultyManagement";
+import Profile from "../pages/Profile";
 
 const AppRoutes = () => {
     return (
@@ -13,6 +14,7 @@ const AppRoutes = () => {
             <Route path="/repository" element={<Repository />} />
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/faculty-management" element={<FacultyManagement />} />
+            <Route path="/profile" element={<Profile />} />
         </Routes>
     );
 };
