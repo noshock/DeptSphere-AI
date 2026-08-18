@@ -4,6 +4,12 @@ const facultySchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+     employeeId: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    },
      email: {
      type: String,
      required: true,
@@ -23,7 +29,6 @@ const facultySchema = new mongoose.Schema({
 
       designation: {
       type: String,
-      required: true,
     },
 
      employeeId: {

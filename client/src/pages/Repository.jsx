@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import api from "../services/api";
 
 const Repository = () => {
@@ -10,34 +11,8 @@ const Repository = () => {
 
     const [editingFile, setEditingFile] = useState(null);
 
-
-    const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    subject: "",
-    department: "",
-    semester: "",
-    category: "",
-    file: null,
-   });
-
-   const handleSearch = async () => {
-    try {
-        if (!search.trim()) {
-            const response = await api.get("/repository");
-            setFiles(response.data);
-            return;
-        }
-
-        const response = await api.get(
-            `/repository/search?title=${search}`
-        );
-
-        setFiles(response.data);
-    } catch (error) {
-        console.error("Search error:", error);
-    }
- };
+    const [searchParams] = useSearchParams();
+    const selectedSemester = searchParams.get("semester");
 
  const handleSemesterFilter = async () => {
     try {
@@ -89,19 +64,60 @@ const Repository = () => {
     }
  };
 
+ const handleSearch = async () => {
+    try {
+        if (!search.trim()) {
+            const response = selectedSemester
+                ? await api.get(
+                    `/repository/filter/semester?semester=${selectedSemester}`
+                )
+                : await api.get("/repository");
+
+            setFiles(response.data);
+            return;
+        }
+
+        const response = await api.get(
+            `/repository/search?title=${search}`
+        );
+
+        setFiles(
+            selectedSemester
+                ? response.data.filter(
+                    (file) =>
+                        String(file.semester) ===
+                        String(selectedSemester)
+                )
+                : response.data
+        );
+
+    } catch (error) {
+        console.error("Search error:", error);
+    }
+};
+
 
     useEffect(() => {
-        const fetchFiles = async () => {
-            try {
-                const response = await api.get("/repository");
-                setFiles(response.data);
-            } catch (error) {
-                console.error("Error fetching files:", error);
-            }
-        };
+    const fetchFiles = async () => {
+        try {
+            let response;
 
-        fetchFiles();
-    }, []);
+            if (selectedSemester) {
+                response = await api.get(
+                    `/repository/filter/semester?semester=${selectedSemester}`
+                );
+            } else {
+                response = await api.get("/repository");
+            }
+
+            setFiles(response.data);
+        } catch (error) {
+            console.error("Error fetching files:", error);
+        }
+    };
+
+    fetchFiles();
+ }, [selectedSemester]);
 
     const handleSubmit = async (e) => {
     e.preventDefault();
@@ -137,166 +153,112 @@ const Repository = () => {
  };
 
     return (
-        <div>
-            <h1>Repository</h1>
-            <input
-                 type="text"
-                 placeholder="Search by title..."
-                 value={search}
-                 onChange={(e) => setSearch(e.target.value)}
-                />
+        <div className="repository-page">
+             <div className="repository-header">
+                 <div>
+                     <span className="page-badge">
+                         DOCUMENT REPOSITORY
+                     </span>
+             
+                     <h1>
+                         Repository
+                     </h1>
+             
+                     <p>
+                         Access and manage department documents.
+                     </p>
+                 </div>
+             
+                 {selectedSemester && (
+                     <div className="repository-semester">
+                         Semester {selectedSemester}
+                     </div>
+                 )}
+             </div>
+             
+             <div className="repository-toolbar">
+                 <input
+                     className="repository-search"
+                     type="text"
+                     placeholder="Search documents by title..."
+                     value={search}
+                     onChange={(e) => setSearch(e.target.value)}
+                 />
+             
+                 <button
+                     className="repository-search-button"
+                     onClick={handleSearch}
+                 >
+                     Search
+                 </button>
+             </div>
 
-                <button onClick={handleSearch}>
-                   Search
-                </button>
-
-        <select
-             value={semester}
-             onChange={(e) => setSemester(e.target.value)}
-             >
-              <option value="">All Semesters</option>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-              <option value="3">Semester 3</option>
-              <option value="4">Semester 4</option>
-              <option value="5">Semester 5</option>
-              <option value="6">Semester 6</option>
-              <option value="7">Semester 7</option>
-              <option value="8">Semester 8</option>
-        </select>
-        <button onClick={handleSemesterFilter}>
-               Filter
-        </button>
-            <h2>Upload Document</h2>
-
- <form onSubmit={handleSubmit}>
-    <input
-    type="text"
-    name="title"
-    placeholder="Title"
-    value={formData.title}
-    onChange={(e) =>
-        setFormData({
-            ...formData,
-            title: e.target.value,
-        })
-    }
- />
-
-    <input
-    type="text"
-    name="description"
-    placeholder="Description"
-    value={formData.description}
-    onChange={(e) =>
-        setFormData({
-            ...formData,
-            description: e.target.value,
-        })
-    }
- />
-
-   <input
-    type="text"
-    name="subject"
-    placeholder="Subject"
-    value={formData.subject}
-    onChange={(e) =>
-        setFormData({
-            ...formData,
-            subject: e.target.value,
-        })
-    }
- />
-
-   <input
-    type="text"
-    name="department"
-    placeholder="Department"
-    value={formData.department}
-    onChange={(e) =>
-        setFormData({
-            ...formData,
-            department: e.target.value,
-        })
-    }
- />
-
-    <input
-    type="number"
-    name="semester"
-    placeholder="Semester"
-    value={formData.semester}
-    onChange={(e) =>
-        setFormData({
-            ...formData,
-            semester: e.target.value,
-        })
-    }
- />
-
-    <select
-    name="category"
-    value={formData.category}
-    onChange={(e) =>
-        setFormData({
-            ...formData,
-            category: e.target.value,
-        })
-    }
- >
-    <option value="">Select Category</option>
-    <option value="Notes">Notes</option>
-    <option value="Question Paper">Question Paper</option>
-    <option value="Lab Manual">Lab Manual</option>
-    <option value="Assignment">Assignment</option>
-    <option value="PPT">PPT</option>
-    <option value="Syllabus">Syllabus</option>
-    <option value="E-Book">E-Book</option>
-    <option value="Other">Other</option>
-  </select>
-
-    <input
-    type="file"
-    name="file"
-    onChange={(e) =>
-        setFormData({
-            ...formData,
-            file: e.target.files[0],
-        })
-    }
- />
-
-    <button type="submit">Upload</button>
-   </form>
-
-            {files.length === 0 ? (
-                <p>No documents found.</p>
-            ) : (
-                <div>
+                {files.length === 0 ? (
+                    <div className="repository-empty">
+                        <h3>No documents found</h3>
+                        <p>
+                            There are no documents available for this semester yet.
+                        </p>
+                    </div>
+                ) : (
+                <div className="repository-list">
                     {files.map((file) => (
-                        <div key={file._id}>
-                            <h3>{file.title}</h3>
-                            <p>{file.description}</p>
-                            <p>Subject: {file.subject}</p>
-                            <p>Semester: {file.semester}</p>
-                            <p>Category: {file.category}</p>
-                            <button
-                                onClick={() =>
-                                window.open(
-                                `http://localhost:5000/${file.fileUrl.replace(/\\/g, "/")}`,
-                                "_blank"
-                                )
-                               }
-                              >
-                              Open
-                            </button>
-                           <button onClick={() => handleDelete(file._id)}>
-                                  Delete
-                           </button>
-                           <button onClick={() => setEditingFile(file)}>
-                               Edit
-                           </button>
+                 <div
+                    className="repository-card"
+                      key={file._id}
+                  >
+                            <div className="repository-card-header">
+                                   <h3>{file.title}</h3>
+                               
+                                   <span className="repository-file-type">
+                                       DOCUMENT
+                                   </span>
+                               </div>
+                               
+                               <p className="repository-description">
+                                   {file.description || "No description available."}
+                               </p>
+                               
+                               <div className="repository-details">
+                               
+                                   <div className="repository-detail">
+                                       <span>SEMESTER</span>
+                                       <strong>{file.semester}</strong>
+                                   </div>
+                               
+                                   <div className="repository-detail">
+                                       <span>UPLOADED BY</span>
+                                       <strong>
+                                           {file.uploadedBy?.name || "Faculty"}
+                                       </strong>
+                                   </div>
+                               
+                               </div>
+                             <button
+                                 className="repository-open"
+                                 onClick={() =>
+                                     window.open(
+                                         `http://localhost:5000/${file.fileUrl.replace(/\\/g, "/")}`,
+                                         "_blank"
+                                     )
+                                 }
+                             >
+                                 Open
+                             </button>
+                             
+                             <button
+                                 className="repository-delete"
+                                 onClick={() => handleDelete(file._id)}
+                             >
+                                 Delete
+                             </button>
+                             
+                             <button
+                                 className="repository-edit"
+                                 onClick={() => setEditingFile(file)}
+                             >
+                                 Edit
+                             </button>
                            {editingFile && editingFile._id === file._id && (
                                     <div>
                                     <input

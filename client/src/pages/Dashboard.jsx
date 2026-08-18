@@ -1,11 +1,113 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
 import { Link } from "react-router-dom";
+const DepartmentFiles = () => {
+    return (
+        <div className="semester-files">
+            
+            <Link to="/repository?dfile=D.1">
+                D.1 Academic Calendar
+            </Link>
 
+            <div className="submenu-parent">
+                <div className="submenu-parent-title">
+                    <span>D.2 Faculty Work Load / Time Table</span>
+                    <span>›</span>
+                </div>
+
+                <div className="nested-submenu">
+                    <Link to="/repository">
+                        D.2A Faculty Work Load
+                    </Link>
+
+                    <Link to="/repository">
+                        D.2B Time Table
+                    </Link>
+                </div>
+            </div>
+
+            <div className="submenu-parent">
+                <div className="submenu-parent-title">
+                    <span>D.3 Student Roll List</span>
+                    <span>›</span>
+                </div>
+
+                <div className="nested-submenu">
+                    <Link to="/repository">
+                        D.3A Student Roll List UG
+                    </Link>
+
+                    <Link to="/repository">
+                        D.3B Student Roll List PG
+                    </Link>
+
+                    <Link to="/repository">
+                        D.3C Student Roll List PhD
+                    </Link>
+                </div>
+            </div>
+
+            <div className="submenu-parent">
+                <div className="submenu-parent-title">
+                    <span>D.4 Open Elective</span>
+                    <span>›</span>
+                </div>
+
+                <div className="nested-submenu">
+                    <Link to="/repository">
+                        D.4A Open Elective UG
+                    </Link>
+
+                    <Link to="/repository">
+                        D.4B Open Elective PG
+                    </Link>
+                </div>
+            </div>
+
+            <Link to="/repository">
+                D.5 Project Allotment
+            </Link>
+
+            <Link to="/repository">
+                D.6 Content Beyond Syllabus
+            </Link>
+
+            <Link to="/repository">
+                D.7 HoD Meeting
+            </Link>
+
+            <div className="submenu-parent">
+                <div className="submenu-parent-title">
+                    <span>D.8 Meetings</span>
+                    <span>›</span>
+                </div>
+
+                <div className="nested-submenu">
+                    <Link to="/repository">
+                        D.8A BoS
+                    </Link>
+
+                    <Link to="/repository">
+                        D.8B AC
+                    </Link>
+
+                    <Link to="/repository">
+                        D.8C Governing Body
+                    </Link>
+                </div>
+            </div>
+
+        </div>
+    );
+};
 const Dashboard = () => {
     const [documentCount, setDocumentCount] = useState(0);
     const [recentFiles, setRecentFiles] = useState([]);
     const [showProfile, setShowProfile] = useState(false);
+    const [activeMenu, setActiveMenu] = useState(null);
+    const [activeSemester, setActiveSemester] = useState(null);
+    const [activeRepositorySemester, setActiveRepositorySemester] = useState(null);
+    const [activeUploadSemester, setActiveUploadSemester] = useState(null);
 
     useEffect(() => {
     const fetchDocuments = async () => {
@@ -51,7 +153,7 @@ const Dashboard = () => {
                     <span className="profile-avatar">👤</span>
                     <span>▼</span>
                </div>
-               {showProfile && (
+                  {showProfile && (
                       <div className="profile-dropdown">
                       <div className="profile-dropdown-header">
                       <div className="profile-dropdown-avatar">
@@ -82,9 +184,16 @@ const Dashboard = () => {
                    </div>
                   </div>
 
-                  <button className="logout-button">
-                     Log Out
-                 </button>
+                  <button
+                    className="logout-button"
+                    onClick={() => {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user");
+                        window.location.href = "/";
+                      }}
+                      >
+                       Log Out
+                   </button>
                 </div>
                )}
             </div>
@@ -95,12 +204,176 @@ const Dashboard = () => {
         <aside className="sidebar">
 
             <nav>
-                <Link to="/dashboard">Dashboard</Link>
-                <Link to="/repository">Repository</Link>
-                <Link to="/repository">Upload</Link>
-                <Link to="#">Reminder</Link>
-                <Link to="#">AI Assistant</Link>
-            </nav>
+                 <Link to="/dashboard">Dashboard</Link>
+
+                   <div
+                        className="dfile-menu-area"
+                        onMouseEnter={() => setActiveMenu("repository")}
+                        onMouseLeave={() => {
+                            setActiveMenu(null);
+                            setActiveRepositorySemester(null);
+                        }}
+                    >
+                        <button className="sidebar-menu-button">
+                            <span>Repository</span>
+                            <span>›</span>
+                        </button>
+                    
+                        {activeMenu === "repository" && (
+                            <div className="sidebar-submenu">
+                                <h3>Repository</h3>
+                    
+                                <div
+                                    className="semester-option"
+                                    onMouseEnter={() =>
+                                        setActiveRepositorySemester("even")
+                                    }
+                                >
+                                    <span>Even Semester</span>
+                                    <span>›</span>
+                    
+                                    {activeRepositorySemester === "even" && (
+                                        <div className="nested-submenu">
+                                            <Link to="/repository?semester=2">
+                                                Semester 2
+                                            </Link>
+                    
+                                            <Link to="/repository?semester=4">
+                                                Semester 4
+                                            </Link>
+                    
+                                            <Link to="/repository?semester=6">
+                                                Semester 6
+                                            </Link>
+                    
+                                            <Link to="/repository?semester=8">
+                                                Semester 8
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+                    
+                                <div
+                                    className="semester-option"
+                                    onMouseEnter={() =>
+                                        setActiveRepositorySemester("odd")
+                                    }
+                                >
+                                    <span>Odd Semester</span>
+                                    <span>›</span>
+                    
+                                    {activeRepositorySemester === "odd" && (
+                                        <div className="nested-submenu">
+                                            <Link to="/repository?semester=1">
+                                                Semester 1
+                                            </Link>
+                    
+                                            <Link to="/repository?semester=3">
+                                                Semester 3
+                                            </Link>
+                    
+                                            <Link to="/repository?semester=5">
+                                                Semester 5
+                                            </Link>
+                    
+                                            <Link to="/repository?semester=7">
+                                                Semester 7
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div
+                      className="dfile-menu-area"
+                      onMouseEnter={() => setActiveMenu("upload")}
+                      onMouseLeave={() => {
+                          setActiveMenu(null);
+                          setActiveUploadSemester(null);
+                      }}
+                  >
+                      <button className="sidebar-menu-button">
+                          <span>Upload</span>
+                          <span>›</span>
+                      </button>
+                  
+                      {activeMenu === "upload" && (
+                          <div className="sidebar-submenu">
+                              <h3>Upload Document</h3>
+                  
+                              <div
+                                  className="semester-option"
+                                  onMouseEnter={() =>
+                                      setActiveUploadSemester("even")
+                                  }
+                              >
+                                  <span>Even Semester</span>
+                                  <span>›</span>
+                  
+                                  {activeUploadSemester === "even" && (
+                                      <div className="nested-submenu">
+                                          <Link to="/upload?semester=2">
+                                              Semester 2
+                                          </Link>
+                  
+                                          <Link to="/upload?semester=4">
+                                              Semester 4
+                                          </Link>
+                  
+                                          <Link to="/upload?semester=6">
+                                              Semester 6
+                                          </Link>
+                  
+                                          <Link to="/upload?semester=8">
+                                              Semester 8
+                                          </Link>
+                                      </div>
+                                  )}
+                              </div>
+                  
+                              <div
+                                  className="semester-option"
+                                  onMouseEnter={() =>
+                                      setActiveUploadSemester("odd")
+                                  }
+                              >
+                                  <span>Odd Semester</span>
+                                  <span>›</span>
+                  
+                                  {activeUploadSemester === "odd" && (
+                                      <div className="nested-submenu">
+                                          <Link to="/upload?semester=1">
+                                              Semester 1
+                                          </Link>
+                  
+                                          <Link to="/upload?semester=3">
+                                              Semester 3
+                                          </Link>
+                  
+                                          <Link to="/upload?semester=5">
+                                              Semester 5
+                                          </Link>
+                  
+                                          <Link to="/upload?semester=7">
+                                              Semester 7
+                                          </Link>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+                      )}
+                  </div>
+
+                    <button
+                        className="sidebar-menu-button"
+                        onClick={() => setActiveMenu(activeMenu === "ai" ? null : "ai")}
+                    >
+                        <span>AI Assistant</span>
+                        <span>›</span>
+                    </button>
+            </nav>                    
 
         </aside>
 

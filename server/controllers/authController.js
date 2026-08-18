@@ -6,6 +6,7 @@ const registerFaculty = async (req, res) => {
     try {
         const {
             name,
+            registrationId,
             email,
             password,
             department,
@@ -13,7 +14,12 @@ const registerFaculty = async (req, res) => {
             employeeId
         } = req.body;
 
-        const existingFaculty = await Faculty.findOne({ email });
+        const existingFaculty = await Faculty.findOne({
+             $or: [
+                 { email },
+                 { registrationId }
+             ]
+         });
 
         if (existingFaculty) {
             return res.status(400).json({
@@ -46,9 +52,9 @@ const registerFaculty = async (req, res) => {
 
 const loginFaculty = async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        const faculty = await Faculty.findOne({ email });
+          const { employeeId, password } = req.body;
+          
+          const faculty = await Faculty.findOne({ employeeId });
 
         if (!faculty) {
             return res.status(404).json({

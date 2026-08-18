@@ -93,4 +93,58 @@ router.delete("/:id", authMiddleware, adminMiddleware, async (req, res) => {
     }
 });
 
+router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const {
+            name,
+            employeeId,
+            email,
+            password,
+            department,
+            designation,
+            role,
+        } = req.body;
+
+        const existingFaculty = await Faculty.findOne({
+            $or: [
+                { employeeId },
+                { email },
+            ],
+        });
+
+        if (existingFaculty) {
+            return res.status(400).json({
+                message: "Faculty with this Registration ID or email already exists.",
+            });
+        }
+
+        const bcrypt = require("bcryptjs");
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const faculty = await Faculty.create({
+            name,
+            employeeId,
+            email,
+            password: hashedPassword,
+            department,
+            designation,
+            role: role || "faculty",
+        });
+
+        const facultyResponse = faculty.toObject();
+        delete facultyResponse.password;
+
+        res.status(201).json({
+            message: "Faculty created successfully",
+            faculty: facultyResponse,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+});
+
 module.exports = router;

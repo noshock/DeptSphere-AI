@@ -23,13 +23,17 @@ const storage = multer.diskStorage({
 
 // Allowed file types
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "application/vnd.ms-powerpoint",
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    ];
+   const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain",
+    "image/jpeg",
+    "image/png",
+    "image/jpg",
+ ];
 
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
