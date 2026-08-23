@@ -11,6 +11,8 @@ import Upload from "../pages/Upload";
 import WriteContent from "../pages/WriteContent";
 import SelectImage from "../pages/SelectImage";
 import Merge from "../pages/Merge";
+import StudentForumAI from "../pages/StudentForumAI";
+import StudentForumAICreate from "../pages/StudentForumAICreate";
 
 const AppRoutes = () => {
     return (
@@ -26,6 +28,8 @@ const AppRoutes = () => {
             <Route path="/upload/write" element={<WriteContent />}/>
             <Route path="/upload/image" element={<SelectImage />}/>
             <Route path="/upload/merge" element={<Merge />}/>
+            <Route path="/student-forum-ai" element={<StudentForumAI />}/>
+            <Route path="/student-forum-ai/create" element={<StudentForumAICreate />}/>
         </Routes>
     );
 };

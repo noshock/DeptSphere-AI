@@ -108,6 +108,7 @@ const Dashboard = () => {
     const [activeSemester, setActiveSemester] = useState(null);
     const [activeRepositorySemester, setActiveRepositorySemester] = useState(null);
     const [activeUploadSemester, setActiveUploadSemester] = useState(null);
+    const [activeStudentForumSemester, setActiveStudentForumSemester] = useState(null);
 
     useEffect(() => {
     const fetchDocuments = async () => {
@@ -364,15 +365,97 @@ const Dashboard = () => {
                               </div>
                           </div>
                       )}
-                  </div>
-
-                    <button
-                        className="sidebar-menu-button"
-                        onClick={() => setActiveMenu(activeMenu === "ai" ? null : "ai")}
-                    >
-                        <span>AI Assistant</span>
-                        <span>›</span>
-                    </button>
+   </div>
+   
+   {/* STUDENT FORUM */}
+                   <div
+                       className="dfile-menu-area"
+                       onMouseEnter={() => setActiveMenu("studentForum")}
+                       onMouseLeave={() => {
+                           setActiveMenu(null);
+                           setActiveStudentForumSemester(null);
+                       }}
+                   >
+                       <button className="sidebar-menu-button">
+                           <span>Student Forum</span>
+                           <span>›</span>
+                       </button>
+   
+                       {activeMenu === "studentForum" && (
+                           <div className="sidebar-submenu">
+                               <h3>Student Forum — D.50</h3>
+   
+                               <div
+                                   className="semester-option"
+                                   onMouseEnter={() =>
+                                       setActiveStudentForumSemester("even")
+                                   }
+                               >
+                                   <span>Even Semester</span>
+                                   <span>›</span>
+   
+                                   {activeStudentForumSemester === "even" && (
+                                       <div className="nested-submenu">
+                                           <Link to="/student-forum-ai?semester=2">
+                                               Semester 2
+                                           </Link>
+   
+                                           <Link to="/student-forum-ai?semester=4">
+                                               Semester 4
+                                           </Link>
+   
+                                           <Link to="/student-forum-ai?semester=6">
+                                               Semester 6
+                                           </Link>
+   
+                                           <Link to="/student-forum-ai?semester=8">
+                                               Semester 8
+                                           </Link>
+                                       </div>
+                                   )}
+                               </div>
+   
+                               <div
+                                   className="semester-option"
+                                   onMouseEnter={() =>
+                                       setActiveStudentForumSemester("odd")
+                                   }
+                               >
+                                   <span>Odd Semester</span>
+                                   <span>›</span>
+   
+                                   {activeStudentForumSemester === "odd" && (
+                                       <div className="nested-submenu">
+                                           <Link to="/student-forum-ai?semester=1">
+                                               Semester 1
+                                           </Link>
+   
+                                           <Link to="/student-forum-ai?semester=3">
+                                               Semester 3
+                                           </Link>
+   
+                                           <Link to="/student-forum-ai?semester=5">
+                                               Semester 5
+                                           </Link>
+   
+                                           <Link to="/student-forum-ai?semester=7">
+                                               Semester 7
+                                           </Link>
+                                       </div>
+                                   )}
+                               </div>
+                           </div>
+                       )}
+                   </div>
+   
+   {/* AI ASSISTANT */}
+                   <button
+                       className="sidebar-menu-button"
+                       onClick={() => setActiveMenu(activeMenu === "ai" ? null : "ai")}
+                   >
+                       <span>AI Assistant</span>
+                       <span>›</span>
+                   </button>
             </nav>                    
 
         </aside>

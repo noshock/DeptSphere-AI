@@ -21,6 +21,13 @@ app.use("/api/auth", authRoutes);
 app.use("/api/faculty", facultyRoutes);
 app.use("/api/repository", repositoryRoutes);
 
+const studentForumAIRoutes = require("./routes/studentForumAIRoutes");
+
+app.use(
+    "/api/student-forum-ai",
+    studentForumAIRoutes
+);
+
 
 app.get("/", (req, res) => {
   res.send("Welcome to DeptSphere AI Backend");

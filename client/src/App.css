@@ -2245,3 +2245,35 @@
     background: #475569;
     color: #ffffff;
 }
+
+.ai-generated-content {
+    margin-top: 30px;
+    background: white;
+    color: #111827;
+    padding: 35px;
+    border-radius: 12px;
+    border: 1px solid #dbe3ef;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.ai-generated-content h2 {
+    color: #111827;
+    margin-bottom: 20px;
+}
+
+.generated-document {
+    background: #ffffff;
+    color: #1f2937;
+    padding: 30px;
+    border-radius: 8px;
+    line-height: 1.7;
+    overflow-x: auto;
+}
+
+.generated-document pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    margin: 0;
+}
