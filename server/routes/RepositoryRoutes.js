@@ -9,7 +9,7 @@ const {
     deleteFile,
     updateFile,
     searchFiles,
-    filterBySemester,
+    filterBySession,
 } = require("../controllers/RepositoryController");
 
 router.post(
@@ -20,7 +20,7 @@ router.post(
 );
 
 router.get("/search", authMiddleware, searchFiles);
-router.get("/filter/semester", authMiddleware, filterBySemester);
+router.get("/filter/session", authMiddleware, filterBySession);
 router.get("/", authMiddleware, getAllFiles);
 router.delete("/:id", authMiddleware, deleteFile);
 router.put("/:id", authMiddleware, updateFile);

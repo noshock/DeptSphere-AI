@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../services/api";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const WriteContent = () => {
     const [searchParams] = useSearchParams();
 
-    const semester = searchParams.get("semester");
+    const session = searchParams.get("session");
+    const term = searchParams.get("term");
 
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
@@ -16,8 +19,7 @@ const WriteContent = () => {
       console.log("Preview button clicked");
       setShowPreview(true);
     };
-
-  const handleSaveToRepository = async () => {
+const handleSaveToRepository = async () => {
     if (!title.trim()) {
         alert("Please enter a document title.");
         return;
@@ -28,45 +30,122 @@ const WriteContent = () => {
         return;
     }
 
+    if (!session || !term) {
+        alert("Session and term are required.");
+        return;
+    }
+
+    if (!showPreview) {
+        alert("Please preview the document first.");
+        return;
+    }
+
+    const element = document.querySelector(".preview-paper");
+
+    if (!element) {
+        alert("Document preview not found.");
+        return;
+    }
+
     try {
         setIsSaving(true);
 
-        const textFile = new File(
-            [content],
-            `${title}.txt`,
-            { type: "text/plain" }
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: "#ffffff",
+            logging: false,
+        });
+
+        const imgData = canvas.toDataURL("image/png");
+
+        const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a4",
+        });
+
+        pdf.addImage(
+            imgData,
+            "PNG",
+            0,
+            0,
+            210,
+            297
+        );
+
+        const pdfBlob = pdf.output("blob");
+
+        const pdfFile = new File(
+            [pdfBlob],
+            `${title}.pdf`,
+            {
+                type: "application/pdf",
+            }
         );
 
         const data = new FormData();
 
         data.append("title", title);
-        data.append("description", content);
-        data.append("subject", "General");
-        data.append("department", "Information Technology");
-        data.append("semester", semester);
-        data.append("category", "Other");
-        data.append("file", textFile);
+        data.append(
+            "description",
+            content
+        );
+        data.append(
+            "subject",
+            "General"
+        );
+        data.append(
+            "department",
+            "Information Technology"
+        );
+        data.append(
+            "session",
+            session
+        );
+        data.append(
+            "term",
+            term
+        );
+        data.append(
+            "category",
+            "Other"
+        );
+        data.append(
+            "file",
+            pdfFile
+        );
 
-        await api.post("/repository/upload", data);
+        const response = await api.post(
+            "/repository/upload",
+            data
+        );
 
-        alert("Document saved to Repository successfully.");
+        console.log(
+            "PDF saved:",
+            response.data
+        );
 
-   }  catch (error) {
-      console.error("Save to Repository error:", error);
+        alert(
+            "PDF saved to Repository successfully."
+        );
 
-      console.log("Status:", error.response?.status);
-     console.log("Response:", error.response?.data);
-      console.log("Error:", error.message);
+    } catch (error) {
+        console.error(
+            "Save PDF error:",
+            error
+        );
 
-      alert(
-          error.response?.data?.message ||
-          error.message ||
-          "Document could not be saved."
-      );
-   } finally {
+        alert(
+            error.response?.data?.message ||
+            error.message ||
+            "PDF could not be saved."
+        );
+
+    } finally {
         setIsSaving(false);
     }
- };
+};
 
     return (
         <div className="write-content-page">
@@ -80,12 +159,12 @@ const WriteContent = () => {
                     <h1>Create Document</h1>
 
                     <p>
-                        Prepare your document for Semester {semester}.
+                        Prepare your document for Session {session} — {term}.
                     </p>
                 </div>
 
                 <div className="semester-badge">
-                    Semester {semester}
+                    {session} — {term}
                 </div>
             </div>
 
@@ -179,9 +258,9 @@ const WriteContent = () => {
                     <div className="preview-header">
                         <div>
                             <h2>Document Preview</h2>
-                            <span>
-                                Semester {semester}
-                            </span>
+                          <span>
+                              Session {session} — {term}
+                          </span>
                         </div>
 
                         <button

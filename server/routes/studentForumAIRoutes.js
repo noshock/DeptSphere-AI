@@ -3,9 +3,12 @@ const router = express.Router();
 
 const {
     generateDocument,
+    editUploadedDocument,
+    saveDocumentToRepository,
 } = require("../controllers/studentForumAIController");
 
 const authMiddleware = require("../middleware/authMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
 router.post(
     "/generate",
@@ -13,4 +16,17 @@ router.post(
     generateDocument
 );
 
+router.post(
+    "/edit-upload",
+    authMiddleware,
+    upload.single("file"),
+    editUploadedDocument
+);
+
+router.post(
+    "/save",
+    authMiddleware,
+    upload.single("file"),
+    saveDocumentToRepository
+);
 module.exports = router;

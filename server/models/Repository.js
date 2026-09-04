@@ -23,22 +23,19 @@ const repositorySchema = new mongoose.Schema(
       required: true,
     },
 
-    semester: {
-      type: Number,
+    session: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    
+    term: {
+      type: String,
+      enum: ["Even", "Odd"],
       required: true,
     },
     category: {
     type: String,
-    enum: [
-        "Notes",
-        "Question Paper",
-        "Lab Manual",
-        "Assignment",
-        "PPT",
-        "Syllabus",
-        "E-Book",
-        "Other"
-    ],
      required: true,
    },
 

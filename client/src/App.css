@@ -2277,3 +2277,864 @@
     font-size: 15px;
     margin: 0;
 }
+
+/* Student Forum AI Create Page */
+
+.student-forum-ai {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+.student-forum-ai textarea {
+    width: 100%;
+    min-height: 140px;
+    box-sizing: border-box;
+    padding: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    resize: vertical;
+    font-size: 15px;
+}
+
+.ai-generated-content {
+    width: 100%;
+    margin-top: 30px;
+    padding: 30px;
+    box-sizing: border-box;
+    background: #ffffff;
+    color: #111827;
+    border-radius: 10px;
+    border: 1px solid #dbe3ef;
+}
+
+.generated-document-editor {
+    width: 100%;
+    min-height: 600px;
+    box-sizing: border-box;
+    padding: 25px;
+    resize: vertical;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #111827;
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.generated-document-actions {
+    margin-top: 20px;
+}
+
+.student-forum-ai-create {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+.ai-prompt-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.ai-prompt-card textarea {
+    display: block;
+    width: 100%;
+    min-height: 160px;
+    box-sizing: border-box;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    resize: vertical;
+}
+
+.generated-document-editor {
+    display: block;
+    width: 100%;
+    min-height: 600px;
+    box-sizing: border-box;
+    padding: 25px;
+    font-size: 16px;
+    line-height: 1.7;
+    resize: vertical;
+}
+
+/* =========================================
+   STUDENT FORUM - RAISONI A4 PREVIEW
+   ========================================= */
+
+.student-forum-preview-page {
+    min-height: 100vh;
+    background: #e5e7eb;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+/* Top buttons */
+
+.preview-toolbar {
+    width: 210mm;
+    margin: 0 auto 15px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* A4 PAGE */
+
+.rajsioni-document {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    padding: 12mm 14mm 10mm;
+    box-sizing: border-box;
+
+    background: #ffffff;
+    color: #111111;
+
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.18);
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================================
+   HEADER
+   ========================================= */
+
+.rajsioni-header {
+    position: relative;
+    width: 100%;
+    min-height: 28mm;
+    display: flex;
+    align-items: center;
+}
+
+.college-logo {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 42mm;
+    height: auto;
+    object-fit: contain;
+    z-index: 2;
+}
+
+.department-header {
+    width: 100%;
+    text-align: center;
+}
+
+.department-header h2 {
+    margin: 6px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #111111;
+}
+
+.orange-line {
+    width: 100%;
+    height: 0.7mm;
+    background: #f28c28;
+}
+
+/* =========================================
+   BODY
+   ========================================= */
+
+.rajsioni-body {
+    min-height: 0;
+    padding: 8mm 3mm 8mm;
+
+    font-size: 10.5px;
+    line-height: 1.5;
+}
+
+.document-meta {
+    text-align: right;
+    font-size: 9px;
+    margin-bottom: 8mm;
+}
+
+.rajsioni-body h1 {
+    font-size: 17px;
+    margin: 5mm 0 3mm;
+}
+
+.rajsioni-body h2 {
+    font-size: 14px;
+    margin: 5mm 0 3mm;
+}
+
+.rajsioni-body h3 {
+    font-size: 12px;
+    margin: 4mm 0 2mm;
+}
+
+.rajsioni-body p {
+    margin: 2mm 0;
+}
+
+.rajsioni-body ul,
+.rajsioni-body ol {
+    margin: 2mm 0 3mm;
+    padding-left: 7mm;
+}
+
+.rajsioni-body li {
+    margin-bottom: 1.5mm;
+}
+
+/* =========================================
+   FOOTER
+   ========================================= */
+
+.rajsioni-footer {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-line {
+    width: 100%;
+    height: 0.7mm;
+    background: #f28c28;
+    margin-top: 3mm;
+    margin-bottom: 0;
+    order: 2;
+}
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 10mm;
+    order: 1;
+}
+
+.footer-text {
+    flex: 1;
+    font-size: 7px;
+    line-height: 1.35;
+    color: #222222;
+}
+
+.footer-text strong {
+    font-size: 8px;
+    color: #111111;
+}
+
+.footer-text p {
+    margin: 0.7mm 0;
+}
+
+.raisoni-education-logo {
+    width: 30mm;
+    height: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+/* =========================================
+   PRINT
+   ========================================= */
+
+@media print {
+
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    body {
+        margin: 0;
+    }
+
+    .student-forum-preview-page {
+        background: #ffffff;
+        padding: 0;
+    }
+
+    .preview-toolbar {
+        display: none;
+    }
+
+    .rajsioni-document {
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0;
+        padding: 12mm 14mm 10mm;
+        box-shadow: none;
+    }
+}
+
+/* FORCE A4 STUDENT FORUM PREVIEW */
+
+.student-forum-preview-page {
+    width: 100%;
+    min-height: 100vh;
+    background: #e5e7eb !important;
+    padding: 24px !important;
+    box-sizing: border-box;
+}
+
+.rajsioni-document {
+    display: block !important;
+
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-width: 210mm !important;
+
+    min-height: 297mm !important;
+
+    margin: 0 auto !important;
+
+    padding: 12mm 14mm 10mm !important;
+
+    box-sizing: border-box !important;
+
+    background: #ffffff !important;
+    color: #111111 !important;
+
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.18) !important;
+
+    font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.rajsioni-header {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 18mm !important;
+}
+
+.college-logo {
+    width: 42mm !important;
+    max-width: 42mm !important;
+    height: auto !important;
+}
+
+.department-header {
+    flex: 1 !important;
+}
+
+.department-header h2 {
+    color: #111111 !important;
+}
+
+.rajsioni-body {
+    width: 100% !important;
+    color: #111111 !important;
+    opacity: 1 !important;
+    font-size: 10.5px !important;
+    line-height: 1.5 !important;
+}
+
+.rajsioni-body * {
+    color: #111111 !important;
+    opacity: 1 !important;
+}
+
+.document-meta {
+    color: #111111 !important;
+}
+
+.footer-text {
+    color: #111111 !important;
+    opacity: 1 !important;
+}
+
+/* =========================================
+   STUDENT FORUM - FINAL A4 REFERENCE FORMAT
+   ========================================= */
+
+.student-forum-preview-page {
+    width: 100%;
+    min-height: 100vh;
+    background: #e5e7eb;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+
+/* Toolbar */
+
+.preview-toolbar {
+    width: 210mm;
+    margin: 0 auto 15px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+
+/* =========================================
+   A4 DOCUMENT
+   ========================================= */
+
+.rajsioni-document {
+    position: relative;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    width: 210mm !important;
+    min-width: 210mm !important;
+    max-width: 210mm !important;
+
+    min-height: 297mm !important;
+
+    margin: 0 auto !important;
+    padding: 12mm 14mm 10mm !important;
+
+    box-sizing: border-box !important;
+
+    background: #ffffff !important;
+    color: #111111 !important;
+
+    font-family: Arial, Helvetica, sans-serif !important;
+
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.18);
+}
+
+
+/* =========================================
+   HEADER
+   ========================================= */
+
+.rajsioni-header {
+    position: relative !important;
+
+    width: 100% !important;
+    min-height: 30mm !important;
+
+    display: block !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* College logo - TOP RIGHT */
+
+.college-logo {
+    position: absolute !important;
+
+    top: -7mm !important;
+    right: 0 !important;
+    left: auto !important;
+
+    width: 42mm !important;
+    max-width: 42mm !important;
+
+    height: auto !important;
+
+    object-fit: contain !important;
+
+    z-index: 10 !important;
+}
+
+
+/* Department heading */
+
+.department-header {
+    width: 100% !important;
+
+    padding-top: 11mm !important;
+
+    box-sizing: border-box !important;
+
+    text-align: center !important;
+}
+
+
+.department-header h2 {
+    margin: 6px 0 !important;
+
+    font-size: 15px !important;
+    font-weight: 700 !important;
+
+    color: #111111 !important;
+}
+
+
+/* Orange lines */
+
+.orange-line {
+    width: 100% !important;
+
+    height: 0.7mm !important;
+
+    background: #f28c28 !important;
+}
+
+
+/* =========================================
+   BODY
+   ========================================= */
+
+.rajsioni-body {
+    flex: 1 1 auto !important;
+
+    width: 100% !important;
+
+    min-height: 0 !important;
+
+    padding: 8mm 3mm 8mm !important;
+
+    box-sizing: border-box !important;
+
+    color: #111111 !important;
+
+    font-size: 10.5px !important;
+    line-height: 1.5 !important;
+
+    opacity: 1 !important;
+}
+
+
+.rajsioni-body * {
+    color: #111111 !important;
+    opacity: 1 !important;
+}
+
+
+.document-meta {
+    text-align: right !important;
+
+    font-size: 9px !important;
+
+    margin-bottom: 8mm !important;
+}
+
+
+.rajsioni-body h1 {
+    font-size: 17px !important;
+
+    margin: 5mm 0 3mm !important;
+}
+
+
+.rajsioni-body h2 {
+    font-size: 14px !important;
+
+    margin: 5mm 0 3mm !important;
+}
+
+
+.rajsioni-body h3 {
+    font-size: 12px !important;
+
+    margin: 4mm 0 2mm !important;
+}
+
+
+.rajsioni-body p {
+    margin: 2mm 0 !important;
+}
+
+
+.rajsioni-body ul,
+.rajsioni-body ol {
+    margin: 2mm 0 3mm !important;
+
+    padding-left: 7mm !important;
+}
+
+
+.rajsioni-body li {
+    margin-bottom: 1.5mm !important;
+}
+
+
+/* =========================================
+   FOOTER
+   ========================================= */
+
+.rajsioni-footer {
+    width: 100% !important;
+
+    margin-top: auto !important;
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* Footer content is ABOVE orange line */
+
+.footer-content {
+    width: 100% !important;
+
+    display: flex !important;
+
+    flex-direction: row !important;
+
+    align-items: flex-end !important;
+
+    justify-content: flex-start !important;
+
+    gap: 10mm !important;
+
+    order: 1 !important;
+}
+
+
+/* Education logo - LEFT */
+
+.raisoni-education-logo {
+    width: 30mm !important;
+    max-width: 30mm !important;
+
+    height: auto !important;
+
+    flex-shrink: 0 !important;
+
+    object-fit: contain !important;
+
+    order: 1 !important;
+}
+
+
+/* Footer text - RIGHT */
+
+.footer-text {
+    flex: 1 !important;
+
+    font-size: 7px !important;
+
+    line-height: 1.35 !important;
+
+    color: #222222 !important;
+
+    opacity: 1 !important;
+
+    order: 2 !important;
+}
+
+
+.footer-text strong {
+    font-size: 8px !important;
+
+    color: #111111 !important;
+}
+
+
+.footer-text p {
+    margin: 0.7mm 0 !important;
+}
+
+
+/* Orange line BELOW footer */
+
+.footer-line {
+    width: 100% !important;
+
+    height: 0.7mm !important;
+
+    margin-top: 3mm !important;
+    margin-bottom: 0 !important;
+
+    background: #f28c28 !important;
+
+    order: 2 !important;
+}
+
+
+/* =========================================
+   PRINT
+   ========================================= */
+
+@media print {
+
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    body {
+        margin: 0;
+    }
+
+    .student-forum-preview-page {
+        padding: 0 !important;
+
+        background: #ffffff !important;
+    }
+
+    .preview-toolbar {
+        display: none !important;
+    }
+
+    .rajsioni-document {
+        display: flex !important;
+        flex-direction: column !important;
+
+        width: 210mm !important;
+        min-width: 210mm !important;
+        max-width: 210mm !important;
+
+        min-height: 297mm !important;
+
+        margin: 0 !important;
+
+        padding: 12mm 14mm 10mm !important;
+
+        box-shadow: none !important;
+    }
+
+    .rajsioni-header {
+        display: block !important;
+    }
+
+    .college-logo {
+        position: absolute !important;
+
+        top: 0 !important;
+        right: 0 !important;
+        left: auto !important;
+    }
+
+    .rajsioni-body {
+        flex: 1 1 auto !important;
+    }
+
+    .rajsioni-footer {
+        margin-top: auto !important;
+    }
+
+    .footer-content {
+        flex-direction: row !important;
+    }
+
+    .raisoni-education-logo {
+        order: 1 !important;
+    }
+
+    .footer-text {
+        order: 2 !important;
+    }
+
+    .footer-line {
+        order: 2 !important;
+    }
+}
+
+/* =========================================
+   FOOTER - REFERENCE FORMAT
+   ========================================= */
+
+.rajsioni-footer {
+    width: 100% !important;
+    margin-top: auto !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
+
+
+/* Footer information at TOP */
+
+.footer-text {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+
+    color: #111111 !important;
+}
+
+
+.footer-text strong {
+    display: block !important;
+
+    font-size: 8px !important;
+    color: #111111 !important;
+
+    margin-bottom: 1mm !important;
+}
+
+
+.footer-text p {
+    margin: 0.7mm 0 !important;
+    color: #111111 !important;
+}
+
+
+/* Logo + orange line */
+
+.footer-bottom {
+    position: relative !important;
+
+    width: 100% !important;
+    height: 14mm !important;
+
+    margin-top: 1mm !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    box-sizing: border-box !important;
+}
+
+
+.raisoni-education-logo {
+    position: relative !important;
+
+    width: 30mm !important;
+    max-width: 30mm !important;
+
+    height: auto !important;
+
+    flex-shrink: 0 !important;
+
+    z-index: 2 !important;
+}
+
+
+/* Orange line */
+
+.footer-line {
+    position: absolute !important;
+
+    left: 0 !important;
+    right: 0 !important;
+
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+
+    width: 100% !important;
+    height: 0.7mm !important;
+
+    margin: 0 !important;
+
+    background: #f28c28 !important;
+
+    z-index: 1 !important;
+}
+
+
+/* Cities */
+
+.footer-cities {
+    width: 100% !important;
+
+    text-align: left !important;
+
+    padding-left: 13mm !important;
+    margin-top: -1mm !important;
+
+    box-sizing: border-box !important;
+
+    color: #111111 !important;
+
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+}

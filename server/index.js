@@ -13,6 +13,13 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
+const path = require("path");
+
+app.use(
+    "/uploads",
+    express.static(path.join(__dirname, "uploads"))
+);
+
 const PORT = 5000;
 
 connectDB();

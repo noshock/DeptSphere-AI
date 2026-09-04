@@ -7,7 +7,8 @@ const uploadFile = async (req, res) => {
             description,
             subject,
             department,
-            semester,
+            session,
+            term,
             category,
         } = req.body;
 
@@ -22,7 +23,8 @@ const uploadFile = async (req, res) => {
             description,
             subject,
             department,
-            semester,
+            session,
+            term,
             category,
             fileName: req.file.filename,
             fileUrl: req.file.path,
@@ -86,9 +88,17 @@ const deleteFile = async (req, res) => {
     }
 };
 
-const updateFile = async (req, res) => {
-    try {
-        const { title, description, subject, department, semester, category } = req.body;
+        const updateFile = async (req, res) => {
+            try {
+               const {
+            title,
+            description,
+            subject,
+            department,
+            session,
+            term,
+            category,
+        } = req.body;
 
         const repository = await Repository.findById(req.params.id);
 
@@ -102,7 +112,8 @@ const updateFile = async (req, res) => {
         repository.description = description || repository.description;
         repository.subject = subject || repository.subject;
         repository.department = department || repository.department;
-        repository.semester = semester || repository.semester;
+        repository.session = session || repository.session;
+        repository.term = term || repository.term;
         repository.category = category || repository.category;
 
         await repository.save();
@@ -139,13 +150,22 @@ const searchFiles = async (req, res) => {
     }
 };
 
-const filterBySemester = async (req, res) => {
+const filterBySession = async (req, res) => {
     try {
-        const { semester } = req.query;
+        const { session, term } = req.query;
 
-        const files = await Repository.find({
-            semester,
-        }).populate("uploadedBy", "name email");
+        const filter = {};
+
+        if (session) {
+            filter.session = session;
+        }
+
+        if (term) {
+            filter.term = term;
+        }
+
+        const files = await Repository.find(filter)
+            .populate("uploadedBy", "name email");
 
         res.status(200).json(files);
 
@@ -162,5 +182,5 @@ module.exports = {
     deleteFile,
     updateFile,
     searchFiles,
-    filterBySemester,
+    filterBySession,
 };
