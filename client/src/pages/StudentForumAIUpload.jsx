@@ -6,6 +6,8 @@ const StudentForumAIUpload = () => {
     const navigate = useNavigate();
 
     const semester = searchParams.get("semester");
+    const session = searchParams.get("session");
+    const term = searchParams.get("term");
 
     const [file, setFile] = useState(null);
     const [error, setError] = useState("");
@@ -21,21 +23,24 @@ const StudentForumAIUpload = () => {
         setError("");
     };
 
-    const handleContinue = () => {
-        if (!file) {
-            setError("Please select a document first.");
-            return;
-        }
+const handleContinue = () => {
+    if (!file) {
+        setError("Please select a document first.");
+        return;
+    }
 
-        navigate(
-            `/student-forum-ai/edit-upload?semester=${semester}`,
-            {
-                state: {
-                    file,
-                },
-            }
-        );
-    };
+    navigate(
+        `/student-forum-ai/edit-upload?semester=${semester}&session=${session}&term=${term}`,
+        {
+            state: {
+                file,
+                semester,
+                session,
+                term,
+            },
+        }
+    );
+};
 
     return (
         <div className="student-forum-ai-upload">
@@ -53,9 +58,11 @@ const StudentForumAIUpload = () => {
                     and edit it using AI.
                 </p>
 
-                {semester && (
+                {(semester || session || term) && (
                     <div className="semester-badge">
-                        Semester {semester}
+                        {semester && `Semester ${semester}`}
+                        {session && ` — Session ${session}`}
+                        {term && ` — ${term}`}
                     </div>
                 )}
 

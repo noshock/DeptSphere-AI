@@ -8,6 +8,9 @@ const StudentForumAIEditUpload = () => {
     const navigate = useNavigate();
 
     const semester = searchParams.get("semester");
+    const session = searchParams.get("session");
+    const term = searchParams.get("term");
+    
     const file = location.state?.file;
 
     const [prompt, setPrompt] = useState("");
@@ -34,7 +37,8 @@ const StudentForumAIEditUpload = () => {
     
             formData.append("file", file);
             formData.append("prompt", prompt);
-            formData.append("semester", semester);
+            formData.append("session", session);
+            formData.append("term", term);
     
             const response = await api.post(
                 "/student-forum-ai/edit-upload",
@@ -84,9 +88,11 @@ const StudentForumAIEditUpload = () => {
                     Tell the AI what you want to change in your document.
                 </p>
 
-                {semester && (
+                {(semester || session || term) && (
                     <div className="semester-badge">
-                        Semester {semester}
+                        {semester && `Semester ${semester}`}
+                        {session && ` — Session ${session}`}
+                        {term && ` — ${term}`}
                     </div>
                 )}
 
@@ -148,15 +154,17 @@ const StudentForumAIEditUpload = () => {
                            type="button"
                            className="primary-button"
                           onClick={() =>
-                              navigate(
-                                  `/student-forum-ai/preview?semester=${semester}`,
-                                  {
-                                      state: {
-                                          content: editedContent,
-                                          semester: semester,
-                                      },
-                                  }
-                              )
+                            navigate(
+                                `/student-forum-ai/preview?semester=${semester}&session=${session}&term=${term}`,
+                                {
+                                    state: {
+                                        content: editedContent,
+                                        semester,
+                                        session,
+                                        term,
+                                    },
+                                }
+                            )
                           }
                        >
                            Preview Document

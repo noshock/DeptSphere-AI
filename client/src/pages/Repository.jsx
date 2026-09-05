@@ -163,7 +163,7 @@ const handleOpenFile = (fileUrl) => {
     const fileUrlToOpen =
         `http://localhost:5000/uploads/${fileName}`;
 
-    window.open(fileUrlToOpen, "_blank");
+    window.open(fileUrlToOpen, "_blank", "noopener,noreferrer");
 };
 
 
