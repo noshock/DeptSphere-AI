@@ -75,7 +75,13 @@ const editUploadedDocument = async (req, res) => {
             term,
         } = req.body;
 
-        if (!req.file) {
+        // Document is required
+        const documentFile = req.files?.file?.[0];
+
+        // Image is optional
+        const imageFile = req.files?.image?.[0] || null;
+
+        if (!documentFile) {
             return res.status(400).json({
                 message: "Document file is required",
             });
@@ -99,24 +105,21 @@ const editUploadedDocument = async (req, res) => {
             });
         }
 
-        const normalizedTerm = term?.trim().toLowerCase();
+        const normalizedTerm = term.trim().toLowerCase();
 
         if (!["even", "odd"].includes(normalizedTerm)) {
             return res.status(400).json({
                 message: "Term must be Even or Odd",
             });
         }
-        
+
         const finalTerm =
             normalizedTerm === "even" ? "Even" : "Odd";
 
         const documentText =
-            await extractDocumentText(req.file);
+            await extractDocumentText(documentFile);
 
-        if (
-            !documentText ||
-            !documentText.trim()
-        ) {
+        if (!documentText || !documentText.trim()) {
             return res.status(400).json({
                 message:
                     "Could not extract text from the document",
@@ -129,6 +132,7 @@ const editUploadedDocument = async (req, res) => {
                 prompt,
                 session,
                 finalTerm,
+                imageFile
             );
 
         res.status(200).json({

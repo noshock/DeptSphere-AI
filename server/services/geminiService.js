@@ -64,11 +64,12 @@ const editStudentForumDocument = async (
     documentText,
     prompt,
     session,
-    term
+    term,
+    imageFile = null
 ) => {
-    const response = await ai.models.generateContent({
-        model: "gemini-3.7-flash",
-        contents: `
+    const parts = [
+        {
+            text: `
 You are an AI assistant for the Student Forum (D.50) of a college.
 
 Session: ${session}
@@ -83,8 +84,6 @@ The user wants to modify this document according to these instructions:
 
 ${prompt}
 
-Edit the existing document according to the user's instructions.
-
 Important rules:
 
 - Preserve the original document's meaning and important information.
@@ -93,8 +92,35 @@ Important rules:
 - Keep the document formal and suitable for an official college document.
 - Use the provided session and term when relevant.
 - Do not mention semesters.
+- If an image is provided, carefully examine it and use its information only when relevant to the user's instruction.
+- Do not invent information that is not present in the document or image.
 - Return the complete edited document, not just the changed portion.
-        `,
+            `,
+        },
+    ];
+
+    // Add image only when the user selected one
+    if (imageFile) {
+        const fs = require("fs");
+
+        const imageData = fs.readFileSync(imageFile.path);
+
+        parts.push({
+            inlineData: {
+                mimeType: imageFile.mimetype,
+                data: imageData.toString("base64"),
+            },
+        });
+    }
+
+    const response = await ai.models.generateContent({
+        model: "gemini-3.7-flash",
+        contents: [
+            {
+                role: "user",
+                parts,
+            },
+        ],
     });
 
     return response.text;

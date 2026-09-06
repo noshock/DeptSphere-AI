@@ -52,7 +52,18 @@ const registerFaculty = async (req, res) => {
 
 const loginFaculty = async (req, res) => {
     try {
-          const { employeeId, password } = req.body;
+          const { employeeId, password, captcha } = req.body;
+
+            if (
+                !req.session.captcha ||
+                captcha?.toUpperCase() !== req.session.captcha
+            ) {
+                return res.status(400).json({
+                    message: "Invalid CAPTCHA",
+                });
+            }
+
+            req.session.captcha = null;
           
           const faculty = await Faculty.findOne({ employeeId });
 

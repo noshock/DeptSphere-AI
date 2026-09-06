@@ -17,6 +17,8 @@ const StudentForumAIEditUpload = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editedContent, setEditedContent] = useState("");
+    
+    const [image, setImage] = useState(null);
 
    const handleEditWithAI = async () => {
         if (!file) {
@@ -39,15 +41,14 @@ const StudentForumAIEditUpload = () => {
             formData.append("prompt", prompt);
             formData.append("session", session);
             formData.append("term", term);
+            
+            if (image) {
+                formData.append("image", image);
+            }
     
             const response = await api.post(
                 "/student-forum-ai/edit-upload",
-                formData,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
+                formData
             );
     
             console.log(
@@ -111,6 +112,52 @@ const StudentForumAIEditUpload = () => {
                         No document was selected.
                     </p>
                 )}
+                <div className="image-upload-section">
+                
+                    <label className="image-upload-button">
+                        🖼️ Add Image
+                        <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/jpg,image/webp"
+                            onChange={(e) => {
+                                const selectedImage = e.target.files[0];
+                
+                                if (selectedImage) {
+                                    setImage(selectedImage);
+                                }
+                            }}
+                            hidden
+                        />
+                    </label>
+                
+                    <span className="image-optional">
+                        Optional
+                    </span>
+                
+                    {image && (
+                        <div className="selected-image">
+                
+                            <img
+                                src={URL.createObjectURL(image)}
+                                alt="Selected"
+                            />
+                
+                            <div className="selected-image-info">
+                                <strong>{image.name}</strong>
+                
+                                <button
+                                    type="button"
+                                    className="remove-image-button"
+                                    onClick={() => setImage(null)}
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                
+                        </div>
+                    )}
+                
+                </div>
 
                 <h2>What do you want to change?</h2>
 
@@ -151,24 +198,46 @@ const StudentForumAIEditUpload = () => {
                         />
 
                         <button
-                           type="button"
-                           className="primary-button"
-                          onClick={() =>
-                            navigate(
-                                `/student-forum-ai/preview?semester=${semester}&session=${session}&term=${term}`,
-                                {
-                                    state: {
-                                        content: editedContent,
-                                        semester,
-                                        session,
-                                        term,
-                                    },
+                            type="button"
+                            className="primary-button"
+                            onClick={() => {
+                                if (image) {
+                                    const reader = new FileReader();
+                        
+                                    reader.onloadend = () => {
+                                        navigate(
+                                            `/student-forum-ai/preview?semester=${semester}&session=${session}&term=${term}`,
+                                            {
+                                                state: {
+                                                    content: editedContent,
+                                                    semester,
+                                                    session,
+                                                    term,
+                                                    imageData: reader.result,
+                                                },
+                                            }
+                                        );
+                                    };
+                        
+                                    reader.readAsDataURL(image);
+                                } else {
+                                    navigate(
+                                        `/student-forum-ai/preview?semester=${semester}&session=${session}&term=${term}`,
+                                        {
+                                            state: {
+                                                content: editedContent,
+                                                semester,
+                                                session,
+                                                term,
+                                                imageData: null,
+                                            },
+                                        }
+                                    );
                                 }
-                            )
-                          }
-                       >
-                           Preview Document
-                       </button>
+                            }}
+                        >
+                            Preview Document
+                        </button>
                     </div>
                 )}
 

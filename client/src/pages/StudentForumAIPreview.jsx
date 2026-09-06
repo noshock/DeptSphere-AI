@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import api from "../services/api";
@@ -8,7 +9,7 @@ const StudentForumAIPreview = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const { content, session, term } = location.state || {};
+    const { content, session, term, imageData, } = location.state || {};
 
     const searchParams = new URLSearchParams(location.search);
 
@@ -287,9 +288,18 @@ const handleSaveDocument = async () => {
                      </span>
                  </div>
 
-                    <ReactMarkdown>
+                    <ReactMarkdown rehypePlugins={[rehypeRaw]}>
                         {content}
                     </ReactMarkdown>
+                    
+                    {imageData && (
+                        <div className="uploaded-document-image">
+                            <img
+                                src={imageData}
+                                alt="Uploaded document reference"
+                            />
+                        </div>
+                    )}
 
                 </div>
 

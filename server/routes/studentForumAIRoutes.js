@@ -19,7 +19,10 @@ router.post(
 router.post(
     "/edit-upload",
     authMiddleware,
-    upload.single("file"),
+    upload.fields([
+        { name: "file", maxCount: 1 },
+        { name: "image", maxCount: 1 },
+    ]),
     editUploadedDocument
 );
 
