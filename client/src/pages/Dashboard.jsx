@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import ReactMarkdown from "react-markdown";
 import api from "../services/api";
 
 const Dashboard = () => {
     const [documentCount, setDocumentCount] = useState(0);
     const [recentFiles, setRecentFiles] = useState([]);
 
-    const [showProfile, setShowProfile] = useState(false);
     const [activeMenu, setActiveMenu] = useState(null);
 
     const [activeRepositorySession, setActiveRepositorySession] =
@@ -14,6 +13,101 @@ const Dashboard = () => {
 
     const [activeStudentForumSession, setActiveStudentForumSession] =
         useState(null);
+
+    const [reminders, setReminders] = useState([]);
+    const [showReminderForm, setShowReminderForm] = useState(false);
+    const [reminderTitle, setReminderTitle] = useState("");
+    const [reminderDescription, setReminderDescription] = useState("");
+    const [reminderDate, setReminderDate] = useState("");
+    const [reminderPriority, setReminderPriority] = useState("Medium");
+
+    const [showCalendar, setShowCalendar] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+    // ================= AI ASSISTANT =================
+
+    const [aiMessages, setAiMessages] = useState([]);
+    const [aiInput, setAiInput] = useState("");
+    const [aiLoading, setAiLoading] = useState(false);
+
+    const sendAIMessage = async (message = aiInput) => {
+        const text = message.trim();
+
+        if (!text || aiLoading) return;
+
+        setAiMessages((prev) => [
+            ...prev,
+            {
+                role: "user",
+                content: text,
+            },
+        ]);
+
+        setAiInput("");
+        setAiLoading(true);
+
+        try {
+            const context = `
+Dashboard Information:
+Total Documents: ${documentCount}
+
+Recent Repository Documents:
+${recentFiles
+    .map(
+        (file) =>
+            `- ${
+                file.name ||
+                file.originalName ||
+                file.filename ||
+                "Unnamed document"
+            }`
+    )
+    .join("\n")}
+
+The user is currently using the DOCMitra AI Dashboard.
+`;
+
+            const response = await api.post("/ai/chat", {
+                message: text,
+                context,
+            });
+
+            setAiMessages((prev) => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content: response.data.reply,
+                },
+            ]);
+        } catch (error) {
+            console.error("AI Assistant error:", error);
+
+            setAiMessages((prev) => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content:
+                        "Sorry, I couldn't process your request right now. Please try again.",
+                },
+            ]);
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    // ================= REMINDERS =================
+
+    const fetchReminders = async () => {
+        try {
+            const response = await api.get("/reminders");
+            setReminders(response.data.reminders || []);
+        } catch (error) {
+            console.error("Failed to fetch reminders:", error);
+        }
+    };
+
+    // ================= INITIAL DATA =================
 
     useEffect(() => {
         const fetchDocuments = async () => {
@@ -28,306 +122,64 @@ const Dashboard = () => {
         };
 
         fetchDocuments();
+        fetchReminders();
     }, []);
+
+    // ================= CALENDAR =================
+
+    const getDaysInMonth = (date) => {
+        return new Date(
+            date.getFullYear(),
+            date.getMonth() + 1,
+            0
+        ).getDate();
+    };
+
+    const getFirstDayOfMonth = (date) => {
+        const day = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            1
+        ).getDay();
+
+        return day === 0 ? 6 : day - 1;
+    };
+
+    const isSameDate = (date1, date2) => {
+        return (
+            date1.getFullYear() === date2.getFullYear() &&
+            date1.getMonth() === date2.getMonth() &&
+            date1.getDate() === date2.getDate()
+        );
+    };
+
+    const hasReminderOnDate = (day) => {
+        return reminders.some((reminder) => {
+            if (reminder.status === "Completed") return false;
+
+            const reminderDate = new Date(reminder.dueDate);
+
+            return (
+                reminderDate.getFullYear() === calendarMonth.getFullYear() &&
+                reminderDate.getMonth() === calendarMonth.getMonth() &&
+                reminderDate.getDate() === day
+            );
+        });
+    };
+
+    const selectedDateReminders = reminders.filter((reminder) => {
+        if (reminder.status === "Completed") return false;
+
+        return isSameDate(
+            new Date(reminder.dueDate),
+            selectedDate
+        );
+    });
+
+    // ================= RENDER =================
 
     return (
         <div className="dashboard">
-
-            {/* ================= HEADER ================= */}
-
-            <header className="top-header">
-
-                <div className="logo-section">
-                    <h2>DOCMitra AI</h2>
-                </div>
-
-                <div className="search-section">
-                    <input
-                        type="text"
-                        placeholder="Search documents, subjects, tags..."
-                    />
-                </div>
-
-                <div className="header-actions">
-
-                    <span className="notification-icon">
-                        🔔
-                    </span>
-
-                    <span className="ai-icon">
-                        ✨
-                    </span>
-
-                    <div
-                        className="profile"
-                        onClick={() =>
-                            setShowProfile(!showProfile)
-                        }
-                    >
-                        <span>Welcome PRAJWAL</span>
-
-                        <span className="profile-avatar">
-                            👤
-                        </span>
-
-                        <span>▼</span>
-                    </div>
-
-                    {showProfile && (
-                        <div className="profile-dropdown">
-
-                            <div className="profile-dropdown-header">
-
-                                <div className="profile-dropdown-avatar">
-                                    👤
-                                </div>
-
-                                <div>
-                                    <strong>PRAJWAL</strong>
-                                    <span>Faculty</span>
-                                </div>
-
-                            </div>
-
-                            <Link
-                                to="/profile"
-                                className="profile-dropdown-item"
-                            >
-                                👤
-
-                                <div>
-                                    <strong>My Profile</strong>
-                                    <span>
-                                        View your profile
-                                    </span>
-                                </div>
-                            </Link>
-
-                            <div className="profile-dropdown-item">
-
-                                🔒
-
-                                <div>
-                                    <strong>
-                                        Change Password
-                                    </strong>
-
-                                    <span>
-                                        Update your password
-                                    </span>
-                                </div>
-
-                            </div>
-
-                            <button
-                                className="logout-button"
-                                onClick={() => {
-                                    localStorage.removeItem("token");
-                                    localStorage.removeItem("user");
-                                    window.location.href = "/";
-                                }}
-                            >
-                                Log Out
-                            </button>
-
-                        </div>
-                    )}
-
-                </div>
-
-            </header>
-
-
-            {/* ================= SIDEBAR ================= */}
-
-            <aside className="sidebar">
-
-                <nav>
-
-                    {/* DASHBOARD */}
-
-                    <Link to="/dashboard">
-                        Dashboard
-                    </Link>
-
-
-                    {/* ================= REPOSITORY ================= */}
-
-                    <div
-                        className="dfile-menu-area"
-                        onMouseEnter={() => {
-                            setActiveMenu("repository");
-                        }}
-                        onMouseLeave={() => {
-                            setActiveMenu(null);
-                            setActiveRepositorySession(null);
-                        }}
-                    >
-
-                        <button className="sidebar-menu-button">
-
-                            <span>
-                                Repository
-                            </span>
-
-                            <span>
-                                ›
-                            </span>
-
-                        </button>
-
-
-                        {activeMenu === "repository" && (
-
-                            <div className="sidebar-submenu">
-
-                                <h3>
-                                    Repository
-                                </h3>
-
-
-                                {/* SESSION */}
-
-                                <div
-                                    className="semester-option"
-                                    onMouseEnter={() =>
-                                        setActiveRepositorySession(
-                                            "2026-2027"
-                                        )
-                                    }
-                                >
-
-                                    <span>
-                                        Session 2026-2027
-                                    </span>
-
-                                    <span>
-                                        ›
-                                    </span>
-
-
-                                    {/* EVEN / ODD */}
-
-                                    {activeRepositorySession ===
-                                        "2026-2027" && (
-
-                                        <div className="nested-submenu">
-
-                                            <Link
-                                                to="/repository?session=2026-2027&term=even"
-                                            >
-                                                Even
-                                            </Link>
-
-                                            <Link
-                                                to="/repository?session=2026-2027&term=odd"
-                                            >
-                                                Odd
-                                            </Link>
-
-                                        </div>
-
-                                    )}
-
-                                </div>
-
-                            </div>
-
-                        )}
-
-                    </div>
-
-
-                    {/* ================= STUDENT FORUM ================= */}
-
-                    <div
-                        className="dfile-menu-area"
-                        onMouseEnter={() => {
-                            setActiveMenu("studentForum");
-                        }}
-                        onMouseLeave={() => {
-                            setActiveMenu(null);
-                            setActiveStudentForumSession(null);
-                        }}
-                    >
-
-                        <button className="sidebar-menu-button">
-
-                            <span>
-                                Student Forum
-                            </span>
-
-                            <span>
-                                ›
-                            </span>
-
-                        </button>
-
-
-                        {activeMenu === "studentForum" && (
-
-                            <div className="sidebar-submenu">
-
-                                <h3>
-                                    Student Forum — D.50
-                                </h3>
-
-
-                                {/* SESSION */}
-
-                                <div
-                                    className="semester-option"
-                                    onMouseEnter={() =>
-                                        setActiveStudentForumSession(
-                                            "2026-2027"
-                                        )
-                                    }
-                                >
-
-                                    <span>
-                                        Session 2026-2027
-                                    </span>
-
-                                    <span>
-                                        ›
-                                    </span>
-
-
-                                    {/* EVEN / ODD */}
-
-                                    {activeStudentForumSession ===
-                                        "2026-2027" && (
-
-                                        <div className="nested-submenu">
-
-                                            <Link
-                                                to="/student-forum-ai?session=2026-2027&term=even"
-                                            >
-                                                Even
-                                            </Link>
-
-                                            <Link
-                                                to="/student-forum-ai?session=2026-2027&term=odd"
-                                            >
-                                                Odd
-                                            </Link>
-
-                                        </div>
-
-                                    )}
-
-                                </div>
-
-                            </div>
-
-                        )}
-
-                    </div>
-
-                </nav>
-
-            </aside>
-
 
             {/* ================= MAIN CONTENT ================= */}
 
@@ -337,18 +189,15 @@ const Dashboard = () => {
                     Welcome to DOCMitra AI
                 </h1>
 
-
                 <div className="dashboard-main">
 
-                    {/* CENTER */}
+                    {/* ================= LEFT / CENTER AREA ================= */}
 
                     <section className="dashboard-center">
 
-
-                        {/* DASHBOARD CARDS */}
+                        {/* ================= DASHBOARD CARDS ================= */}
 
                         <div className="dashboard-cards">
-
 
                             {/* TOTAL DOCUMENTS */}
 
@@ -404,27 +253,38 @@ const Dashboard = () => {
                             </div>
 
 
-                            {/* AI QUERIES */}
+                            {/* CALENDAR */}
 
-                            <div className="card">
+                            <div
+                                className="calendar-card"
+                                onClick={() => setShowCalendar(true)}
+                            >
 
-                                <div className="card-icon">
-                                    ✨
+                                <div className="calendar-icon">
+                                    📅
                                 </div>
 
-                                <div>
+                                <div className="calendar-info">
 
                                     <h3>
-                                        AI Queries
+                                        {new Date().toLocaleDateString(
+                                            "en-IN",
+                                            {
+                                                day: "2-digit",
+                                                month: "short",
+                                                year: "numeric",
+                                            }
+                                        )}
                                     </h3>
 
                                     <p>
-                                        0
+                                        {new Date().toLocaleDateString(
+                                            "en-IN",
+                                            {
+                                                weekday: "long",
+                                            }
+                                        )}
                                     </p>
-
-                                    <span>
-                                        AI interactions
-                                    </span>
 
                                 </div>
 
@@ -433,227 +293,395 @@ const Dashboard = () => {
                         </div>
 
 
-                        {/* RECENT FILES */}
+                        {/* ================= SMART REMINDERS ================= */}
 
-                        <div className="recent-files">
+                        <div className="dashboard-reminder-wrapper">
 
-                            <h2>
-                                Recent Documents
-                            </h2>
+                            <div className="reminder-card">
 
-                            {recentFiles.length === 0 ? (
+                                <div className="reminder-header">
 
-                                <p>
-                                    No recent uploads.
-                                </p>
-
-                            ) : (
-
-                                recentFiles.map((file) => (
-
-                                    <div
-                                        className="recent-file"
-                                        key={file._id}
-                                    >
-
+                                    <div>
                                         <h3>
-                                            {file.title}
+                                            Smart Reminders
                                         </h3>
 
-                                        <p>
-                                            {file.subject}
-                                        </p>
+                                        <span>
+                                            Never miss an important date
+                                        </span>
+                                    </div>
+
+                                </div>
+
+                                <button
+                                    className="add-reminder-button"
+                                    onClick={() =>
+                                        setShowReminderForm(true)
+                                    }
+                                >
+                                    + Add Reminder
+                                </button>
+
+
+                                {reminders.filter(
+                                    (reminder) =>
+                                        reminder.status !== "Completed"
+                                ).length === 0 ? (
+
+                                    <div className="no-reminders">
+
+                                        <div className="no-reminders-icon">
+                                            ✓
+                                        </div>
 
                                         <p>
-                                            Session {file.session}
+                                            No upcoming reminders
                                         </p>
 
-                                        <p>
-                                            {file.term}
-                                        </p>
+                                        <span>
+                                            You're all caught up.
+                                        </span>
 
                                     </div>
 
-                                ))
+                                ) : (
 
-                            )}
+                                    <div className="reminder-list">
+
+                                        {reminders
+                                            .filter(
+                                                (reminder) =>
+                                                    reminder.status !==
+                                                    "Completed"
+                                            )
+                                            .slice(0, 3)
+                                            .map((reminder) => (
+
+                                                <div
+                                                    className={`reminder-item ${reminder.priority?.toLowerCase()}`}
+                                                    key={reminder._id}
+                                                >
+
+                                                    <div className="reminder-dot"></div>
+
+                                                    <div className="reminder-content">
+
+                                                        <strong>
+                                                            {reminder.title}
+                                                        </strong>
+
+                                                        <span>
+                                                            {new Date(
+                                                                reminder.dueDate
+                                                            ).toLocaleDateString(
+                                                                "en-IN",
+                                                                {
+                                                                    day: "numeric",
+                                                                    month: "short",
+                                                                    year: "numeric",
+                                                                }
+                                                            )}
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <button
+                                                        type="button"
+                                                        className="delete-reminder-button"
+                                                        onClick={async (e) => {
+
+                                                            e.stopPropagation();
+
+                                                            if (
+                                                                !window.confirm(
+                                                                    "Delete this reminder?"
+                                                                )
+                                                            ) {
+                                                                return;
+                                                            }
+
+                                                            try {
+
+                                                                await api.delete(
+                                                                    `/reminders/${reminder._id}`
+                                                                );
+
+                                                                fetchReminders();
+
+                                                            } catch (error) {
+
+                                                                console.error(
+                                                                    "Failed to delete reminder:",
+                                                                    error
+                                                                );
+
+                                                                alert(
+                                                                    "Failed to delete reminder."
+                                                                );
+                                                            }
+                                                        }}
+                                                    >
+
+                                                        <svg
+                                                            width="16"
+                                                            height="16"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        >
+
+                                                            <polyline points="3 6 5 6 21 6" />
+
+                                                            <path d="M19 6l-1 14H6L5 6" />
+
+                                                            <path d="M10 11v6" />
+
+                                                            <path d="M14 11v6" />
+
+                                                            <path d="M9 6V4h6v2" />
+
+                                                        </svg>
+
+                                                    </button>
+
+                                                </div>
+
+                                            ))}
+
+                                    </div>
+
+                                )}
+
+                            </div>
 
                         </div>
 
                     </section>
 
 
-                    {/* ================= RIGHT SIDE ================= */}
+                    {/* ================= AI ASSISTANT ================= */}
 
                     <aside className="dashboard-right">
 
-
-                        {/* CALENDAR */}
-
-                        <div className="calendar-card">
-
-                            <div className="calendar-icon">
-                                📅
-                            </div>
-
-                            <div className="calendar-info">
-
-                                <h3>
-                                    {new Date().toLocaleDateString(
-                                        "en-IN",
-                                        {
-                                            day: "2-digit",
-                                            month: "short",
-                                            year: "numeric",
-                                        }
-                                    )}
-                                </h3>
-
-                                <p>
-                                    {new Date().toLocaleDateString(
-                                        "en-IN",
-                                        {
-                                            weekday: "long",
-                                        }
-                                    )}
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-                        {/* SMART REMINDERS */}
-
-                        <div className="reminder-card">
-
-                            <div className="panel-header">
-
-                                <h3>
-                                    Smart Reminders
-                                </h3>
-
-                                <span>
-                                    View All
-                                </span>
-
-                            </div>
-
-
-                            <div className="reminder-item">
-
-                                <div className="reminder-icon reminder-red">
-                                    📅
-                                </div>
-
-                                <div>
-
-                                    <strong>
-                                        Upcoming Department Event
-                                    </strong>
-
-                                    <p>
-                                        Check event details and schedule
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-
-                            <div className="reminder-item">
-
-                                <div className="reminder-icon reminder-orange">
-                                    ⚠️
-                                </div>
-
-                                <div>
-
-                                    <strong>
-                                        Document Reminder
-                                    </strong>
-
-                                    <p>
-                                        Important document needs attention
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-
-                            <div className="reminder-item">
-
-                                <div className="reminder-icon reminder-blue">
-                                    ℹ️
-                                </div>
-
-                                <div>
-
-                                    <strong>
-                                        Department Notice
-                                    </strong>
-
-                                    <p>
-                                        New information is available
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        {/* AI CARD */}
-
                         <div className="ai-card">
 
-                            <div className="panel-header">
+                            {/* AI HEADER */}
 
-                                <h3>
-                                    AI Assistant
-                                </h3>
+                            <div className="ai-card-header">
 
-                                <span>
-                                    New Chat
-                                </span>
+                                <div className="ai-title-section">
 
-                            </div>
+                                    <div className="ai-title-icon">
+                                        ✨
+                                    </div>
 
-                            <div className="ai-welcome">
+                                    <div>
 
-                                <div className="ai-avatar">
-                                    ✨
-                                </div>
+                                        <h3>
+                                            AI Assistant
+                                        </h3>
 
-                                <div>
+                                        <span>
+                                            Your department assistant
+                                        </span>
 
-                                    <strong>
-                                        Hello, Prajwal! 👋
-                                    </strong>
-
-                                    <p>
-                                        Ask me anything about your
-                                        department documents.
-                                    </p>
+                                    </div>
 
                                 </div>
 
+
+                                <button
+                                    type="button"
+                                    className="new-chat-button"
+                                    onClick={(e) => {
+
+                                        e.preventDefault();
+                                        e.stopPropagation();
+
+                                        setAiMessages([]);
+                                        setAiInput("");
+                                    }}
+                                >
+                                    ↻ New Chat
+                                </button>
+
                             </div>
 
-                            <div className="ai-suggestions">
 
-                                <button>
-                                    Summarize a document
-                                </button>
+                            {/* AI CHAT */}
 
-                                <button>
-                                    Find important topics
-                                </button>
+                            <div className="ai-chat-messages">
 
-                                <button>
-                                    Generate questions
+                                {aiMessages.length === 0 ? (
+
+                                    <div className="ai-welcome">
+
+                                        <div className="ai-avatar">
+                                            ✨
+                                        </div>
+
+                                        <div className="ai-welcome-content">
+
+                                            <strong>
+                                                Hello, Prajwal! 👋
+                                            </strong>
+
+                                            <p>
+                                                I'm your DOCMitra AI assistant.
+                                                Ask me about your department,
+                                                documents, or dashboard.
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                ) : (
+
+                                    aiMessages.map((message, index) => (
+
+                                        <div
+                                            key={index}
+                                            className={`ai-message ${
+                                                message.role === "user"
+                                                    ? "ai-user-message"
+                                                    : "ai-assistant-message"
+                                            }`}
+                                        >
+
+                                            <div className="ai-message-avatar">
+
+                                                {message.role === "user"
+                                                    ? "👤"
+                                                    : "✨"}
+
+                                            </div>
+
+
+                                            <div className="ai-message-content">
+                                                <ReactMarkdown>
+                                                    {message.content}
+                                                </ReactMarkdown>
+                                            </div>
+
+                                        </div>
+
+                                    ))
+
+                                )}
+
+
+                                {aiLoading && (
+
+                                    <div className="ai-message ai-assistant-message">
+
+                                        <div className="ai-message-avatar">
+                                            ✨
+                                        </div>
+
+                                        <div className="ai-message-content ai-thinking">
+
+                                            <span></span>
+                                            <span></span>
+                                            <span></span>
+
+                                        </div>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
+
+                            {/* AI SUGGESTIONS */}
+
+                            {aiMessages.length === 0 && (
+
+                                <div className="ai-suggestions">
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            sendAIMessage(
+                                                "How many documents are available in the repository?"
+                                            )
+                                        }
+                                    >
+                                        📄 Document count
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            sendAIMessage(
+                                                "What can you help me with?"
+                                            )
+                                        }
+                                    >
+                                        ✨ What can you do?
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            sendAIMessage(
+                                                "Explain the DOCMitra dashboard"
+                                            )
+                                        }
+                                    >
+                                        ❓ Explain dashboard
+                                    </button>
+
+                                </div>
+
+                            )}
+
+
+                            {/* AI INPUT */}
+
+                            <div className="ai-input-area">
+
+                                <textarea
+                                    placeholder="Ask something about your documents..."
+                                    value={aiInput}
+                                    onChange={(e) =>
+                                        setAiInput(e.target.value)
+                                    }
+                                    onKeyDown={(e) => {
+
+                                        if (
+                                            e.key === "Enter" &&
+                                            !e.shiftKey
+                                        ) {
+
+                                            e.preventDefault();
+
+                                            sendAIMessage();
+                                        }
+
+                                    }}
+                                    disabled={aiLoading}
+                                    rows={1}
+                                />
+
+
+                                <button
+                                    type="button"
+                                    className="ai-send-button"
+                                    onClick={() => sendAIMessage()}
+                                    disabled={
+                                        aiLoading ||
+                                        !aiInput.trim()
+                                    }
+                                >
+                                    ➤
                                 </button>
 
                             </div>
@@ -665,6 +693,431 @@ const Dashboard = () => {
                 </div>
 
             </main>
+
+
+            {/* ================= CALENDAR POPUP ================= */}
+
+            {showCalendar && (
+
+                <div
+                    className="calendar-overlay"
+                    onClick={() => setShowCalendar(false)}
+                >
+
+                    <div
+                        className="calendar-popup"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+
+                        <div className="calendar-popup-header">
+
+                            <button
+                                className="calendar-today-button"
+                                onClick={() => {
+
+                                    const today = new Date();
+
+                                    setCalendarMonth(today);
+                                    setSelectedDate(today);
+
+                                }}
+                            >
+                                Today
+                            </button>
+
+
+                            <button
+                                className="calendar-nav-button"
+                                onClick={() =>
+                                    setCalendarMonth(
+                                        new Date(
+                                            calendarMonth.getFullYear(),
+                                            calendarMonth.getMonth() - 1,
+                                            1
+                                        )
+                                    )
+                                }
+                            >
+                                ‹
+                            </button>
+
+
+                            <h2>
+                                {calendarMonth.toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                        month: "long",
+                                        year: "numeric",
+                                    }
+                                )}
+                            </h2>
+
+
+                            <div className="calendar-header-actions">
+
+                                <button
+                                    className="calendar-nav-button"
+                                    onClick={() =>
+                                        setCalendarMonth(
+                                            new Date(
+                                                calendarMonth.getFullYear(),
+                                                calendarMonth.getMonth() + 1,
+                                                1
+                                            )
+                                        )
+                                    }
+                                >
+                                    ›
+                                </button>
+
+
+                                <button
+                                    className="calendar-close-button"
+                                    onClick={() =>
+                                        setShowCalendar(false)
+                                    }
+                                >
+                                    ✕
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div className="calendar-weekdays">
+
+                            {[
+                                "Mo",
+                                "Tu",
+                                "We",
+                                "Th",
+                                "Fr",
+                                "Sa",
+                                "Su",
+                            ].map((day) => (
+
+                                <span key={day}>
+                                    {day}
+                                </span>
+
+                            ))}
+
+                        </div>
+
+
+                        <div className="calendar-days">
+
+                            {Array.from({
+                                length:
+                                    getFirstDayOfMonth(
+                                        calendarMonth
+                                    ),
+                            }).map((_, index) => (
+
+                                <span
+                                    className="calendar-empty"
+                                    key={`empty-${index}`}
+                                />
+
+                            ))}
+
+
+                            {Array.from({
+                                length:
+                                    getDaysInMonth(
+                                        calendarMonth
+                                    ),
+                            }).map((_, index) => {
+
+                                const day = index + 1;
+
+                                const date = new Date(
+                                    calendarMonth.getFullYear(),
+                                    calendarMonth.getMonth(),
+                                    day
+                                );
+
+                                const isToday = isSameDate(
+                                    date,
+                                    new Date()
+                                );
+
+                                const isSelected = isSameDate(
+                                    date,
+                                    selectedDate
+                                );
+
+                                const hasReminder =
+                                    hasReminderOnDate(day);
+
+                                return (
+
+                                    <button
+                                        key={day}
+                                        className={`calendar-day
+                                            ${isToday ? "today" : ""}
+                                            ${isSelected ? "selected" : ""}
+                                        `}
+                                        onClick={() =>
+                                            setSelectedDate(date)
+                                        }
+                                    >
+
+                                        <span>
+                                            {day}
+                                        </span>
+
+
+                                        {hasReminder && (
+
+                                            <i className="calendar-reminder-dot" />
+
+                                        )}
+
+                                    </button>
+
+                                );
+
+                            })}
+
+                        </div>
+
+
+                        <div className="selected-date-reminders">
+
+                            <h3>
+                                {selectedDate.toLocaleDateString(
+                                    "en-IN",
+                                    {
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric",
+                                    }
+                                )}
+                            </h3>
+
+
+                            {selectedDateReminders.length === 0 ? (
+
+                                <p>
+                                    No reminders for this date.
+                                </p>
+
+                            ) : (
+
+                                selectedDateReminders.map(
+                                    (reminder) => (
+
+                                        <div
+                                            className="calendar-reminder"
+                                            key={reminder._id}
+                                        >
+
+                                            <span>
+                                                🔔
+                                            </span>
+
+                                            <div>
+
+                                                <strong>
+                                                    {reminder.title}
+                                                </strong>
+
+                                                <p>
+                                                    {reminder.description ||
+                                                        "Reminder"}
+                                                </p>
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                )
+
+                            )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
+
+
+            {/* ================= REMINDER FORM ================= */}
+
+            {showReminderForm && (
+
+                <div
+                    className="calendar-overlay"
+                    onClick={() =>
+                        setShowReminderForm(false)
+                    }
+                >
+
+                    <div
+                        className="reminder-form-popup"
+                        onClick={(e) =>
+                            e.stopPropagation()
+                        }
+                    >
+
+                        <h2>
+                            Create Reminder
+                        </h2>
+
+
+                        <input
+                            type="text"
+                            placeholder="Reminder title"
+                            value={reminderTitle}
+                            onChange={(e) =>
+                                setReminderTitle(
+                                    e.target.value
+                                )
+                            }
+                        />
+
+
+                        <input
+                            type="date"
+                            value={reminderDate}
+                            onChange={(e) =>
+                                setReminderDate(
+                                    e.target.value
+                                )
+                            }
+                        />
+
+
+                        <select
+                            value={reminderPriority}
+                            onChange={(e) =>
+                                setReminderPriority(
+                                    e.target.value
+                                )
+                            }
+                        >
+
+                            <option>
+                                Low
+                            </option>
+
+                            <option>
+                                Medium
+                            </option>
+
+                            <option>
+                                High
+                            </option>
+
+                        </select>
+
+
+                        <div className="reminder-form-actions">
+
+                            <button
+                                className="cancel-button"
+                                onClick={() =>
+                                    setShowReminderForm(
+                                        false
+                                    )
+                                }
+                            >
+                                Cancel
+                            </button>
+
+
+                            <button
+                                className="save-button"
+                                onClick={async () => {
+
+                                    if (
+                                        !reminderTitle ||
+                                        !reminderDate
+                                    ) {
+
+                                        alert(
+                                            "Please enter a title and date."
+                                        );
+
+                                        return;
+                                    }
+
+
+                                    try {
+
+                                        await api.post(
+                                            "/reminders",
+                                            {
+                                                title:
+                                                    reminderTitle,
+                                                type: "Custom",
+                                                priority:
+                                                    reminderPriority,
+                                                dueDate:
+                                                    reminderDate,
+                                            }
+                                        );
+
+
+                                        setReminderTitle("");
+
+                                        setReminderDescription("");
+
+                                        setReminderDate("");
+
+                                        setReminderPriority(
+                                            "Medium"
+                                        );
+
+                                        setShowReminderForm(
+                                            false
+                                        );
+
+                                        fetchReminders();
+
+                                        alert(
+                                            "Reminder created successfully!"
+                                        );
+
+                                    } catch (error) {
+
+                                        console.error(
+                                            "Failed to create reminder:",
+                                            error
+                                        );
+
+                                        console.error(
+                                            "Server response:",
+                                            error.response?.data
+                                        );
+
+                                        alert(
+                                            error.response?.data
+                                                ?.message ||
+                                                error.response?.data
+                                                    ?.error ||
+                                                "Failed to create reminder."
+                                        );
+
+                                    }
+
+                                }}
+                            >
+                                Save Reminder
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
 
         </div>
     );

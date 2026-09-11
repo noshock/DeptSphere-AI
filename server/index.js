@@ -9,8 +9,12 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const facultyRoutes = require("./routes/facultyRoutes");
 const repositoryRoutes = require("./routes/RepositoryRoutes");
+const reminderRoutes = require("./routes/reminderRoutes");
+console.log("REMINDER ROUTES LOADED");
+const aiRoutes = require("./routes/aiRoutes");
 const studentForumAIRoutes = require("./routes/studentForumAIRoutes");
 const captchaRoutes = require("./routes/captchaRoutes");
+
 
 
 app.use(
@@ -57,6 +61,8 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/faculty", facultyRoutes);
 app.use("/api/repository", repositoryRoutes);
+app.use("/api/reminders", reminderRoutes);
+app.use("/api/ai", aiRoutes);
 app.use(
     "/api/student-forum-ai",
     studentForumAIRoutes

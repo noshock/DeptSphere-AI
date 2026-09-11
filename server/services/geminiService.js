@@ -126,8 +126,65 @@ Important rules:
     return response.text;
 };
 
+const chatWithDashboardAI = async (message, context = {}) => {
+    const models = [
+        "gemini-3.7-flash",
+        "gemini-3.8-flash",
+        "gemini-3.6-flash",
+    ];
+
+    let lastError;
+
+    for (const model of models) {
+        try {
+            console.log(`Trying Dashboard AI model: ${model}`);
+
+            const response = await ai.models.generateContent({
+                model,
+                contents: `
+You are DOCMitra AI, an AI assistant for a college department management system.
+
+Help the user with:
+- Dashboard questions
+- Repository questions
+- Document explanation and summarization
+- Important topics
+- Question generation
+- Student Forum related questions
+- Guidance about using the department system
+- General academic help related to the department
+
+Do not invent information that is not provided.
+
+Dashboard context:
+${JSON.stringify(context, null, 2)}
+
+User message:
+${message}
+
+Give a clear, useful answer.
+                `,
+            });
+
+            console.log(`Dashboard AI success using: ${model}`);
+
+            return response.text;
+        } catch (error) {
+            console.error(
+                `Dashboard AI ${model} failed:`,
+                error.message
+            );
+
+            lastError = error;
+        }
+    }
+
+    throw lastError;
+};
+
 
 module.exports = {
     generateStudentForumDocument,
     editStudentForumDocument,
+    chatWithDashboardAI,
 };

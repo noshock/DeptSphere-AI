@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcryptjs");
 
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
@@ -138,6 +139,72 @@ router.post("/create", authMiddleware, adminMiddleware, async (req, res) => {
         res.status(201).json({
             message: "Faculty created successfully",
             faculty: facultyResponse,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+});
+
+router.put("/change-password", authMiddleware, async (req, res) => {
+    try {
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({
+                message: "All fields are required.",
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                message: "New passwords do not match.",
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                message: "Password must be at least 6 characters.",
+            });
+        }
+
+        const faculty = await Faculty.findById(req.user.id);
+
+        if (!faculty) {
+            return res.status(404).json({
+                message: "Faculty not found.",
+            });
+        }
+
+        const isMatch = await bcrypt.compare(
+            currentPassword,
+            faculty.password
+        );
+
+        if (!isMatch) {
+            return res.status(400).json({
+                message: "Current password is incorrect.",
+            });
+        }
+
+        const samePassword = await bcrypt.compare(
+            newPassword,
+            faculty.password
+        );
+
+        if (samePassword) {
+            return res.status(400).json({
+                message: "New password cannot be the same as the current password.",
+            });
+        }
+
+        faculty.password = await bcrypt.hash(newPassword, 10);
+        await faculty.save();
+
+        res.status(200).json({
+            message: "Password changed successfully.",
         });
 
     } catch (error) {

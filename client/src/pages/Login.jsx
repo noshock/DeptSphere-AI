@@ -58,14 +58,17 @@ const handleSubmit = async (e) => {
                 navigate("/dashboard");
             }
 
-        } catch (error) {
-            console.log(error);
-
-            alert(
-                error.response?.data?.message || "Login failed"
-            );
-        }
-};
+                } catch (error) {
+                    console.log(error);
+                
+                    // Refresh CAPTCHA after failed login
+                    generateCaptcha();
+                
+                    alert(
+                        error.response?.data?.message || "Login failed"
+                    );
+                }
+                };
 
     return (
         <div className="login-page">
@@ -193,12 +196,13 @@ const handleSubmit = async (e) => {
 </div>
 
                     <div className="login-options">
-                        <button
-                            type="button"
-                            className="forgot-password"
-                        >
-                            Forgot Password?
-                        </button>
+                    <button
+                        type="button"
+                        className="forgot-password"
+                        onClick={() => navigate("/forgot-password")}
+                    >
+                        Forgot Password?
+                    </button>
                     </div>
 
                     <button
