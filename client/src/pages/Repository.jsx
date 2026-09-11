@@ -10,13 +10,12 @@ const Repository = () => {
     const [searchParams] = useSearchParams();
 
     const selectedSession = searchParams.get("session");
-    const selectedType = searchParams.get("type");
-
-    // Convert URL type to database term
+    const selectedTermParam = searchParams.get("term");
+    
     const selectedTerm =
-        selectedType === "even"
+        selectedTermParam === "even"
             ? "Even"
-            : selectedType === "odd"
+            : selectedTermParam === "odd"
             ? "Odd"
             : null;
 
@@ -54,7 +53,7 @@ const Repository = () => {
 
     useEffect(() => {
         fetchFiles();
-    }, [selectedSession, selectedType]);
+    }, [selectedSession, selectedTermParam]);
 
 
     // =========================
