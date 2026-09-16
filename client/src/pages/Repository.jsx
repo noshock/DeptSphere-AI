@@ -103,45 +103,24 @@ const Repository = () => {
     // SEARCH
     // =========================
 
-    const handleSearch = async () => {
-        try {
-            if (!search.trim()) {
-                await fetchFiles();
-                return;
-            }
+const handleSearch = async () => {
+    const query = search.trim();
 
-            const response = await api.get(
-                `/repository/search?title=${encodeURIComponent(search)}`
-            );
+    if (!query) {
+        fetchFiles();
+        return;
+    }
 
-            let filteredFiles = response.data;
+    try {
+        const response = await api.get(
+            `/repository/search?title=${encodeURIComponent(query)}`
+        );
 
-
-            // Filter by session
-            if (selectedSession) {
-                filteredFiles = filteredFiles.filter(
-                    (file) =>
-                        String(file.session) ===
-                        String(selectedSession)
-                );
-            }
-
-
-            // Filter by Even / Odd
-            if (selectedTerm) {
-                filteredFiles = filteredFiles.filter(
-                    (file) =>
-                        file.term === selectedTerm
-                );
-            }
-
-
-            setFiles(filteredFiles);
-
-        } catch (error) {
-            console.error("Search error:", error);
-        }
-    };
+        setFiles(response.data);
+    } catch (error) {
+        console.error("Search failed:", error);
+    }
+};
 
 
     // =========================
@@ -220,9 +199,14 @@ const handleOpenFile = (fileUrl) => {
                     type="text"
                     placeholder="Search documents by title..."
                     value={search}
-                    onChange={(e) =>
-                        setSearch(e.target.value)
-                    }
+onChange={(e) => {
+    const value = e.target.value;
+    setSearch(value);
+
+    if (!value.trim()) {
+        fetchFiles();
+    }
+}}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             handleSearch();

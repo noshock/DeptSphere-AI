@@ -5,6 +5,7 @@ const {
     generateDocument,
     editUploadedDocument,
     saveDocumentToRepository,
+    getNextReferenceNumber,
 } = require("../controllers/studentForumAIController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -24,6 +25,12 @@ router.post(
         { name: "image", maxCount: 1 },
     ]),
     editUploadedDocument
+);
+
+router.get(
+    "/next-reference",
+    authMiddleware,
+    getNextReferenceNumber
 );
 
 router.post(

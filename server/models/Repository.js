@@ -59,6 +59,11 @@ const repositorySchema = new mongoose.Schema(
       ref: "Faculty",
       required: true,
     },
+    referenceNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
   },
   {
     timestamps: true,

@@ -1,15 +1,237 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import api from "../services/api";
+import { Rnd } from "react-rnd";
 
 const StudentForumAIPreview = () => {
     const location = useLocation();
     const navigate = useNavigate();
+const {
+    content: rawContent,
+    title,
+    category,
+    documentType,
+    session,
+    term,
+    prompt,
+    issueDate,
+    referenceNumber: passedReferenceNumber,
+    imageData
+} = location.state || {};
 
-    const { content, session, term, imageData, } = location.state || {};
+const content =
+    typeof rawContent === "string"
+        ? rawContent
+        : rawContent?.content || "";
+
+    const [facultyDepartment, setFacultyDepartment] = useState("");
+    const [referenceNumber, setReferenceNumber] = useState("");
+    const [imageWidth, setImageWidth] = useState(300);
+    const [imageHeight, setImageHeight] = useState(200);
+    const referenceRequestStarted = useRef(false);
+    
+const extractDateFromPrompt = (text) => {
+    if (!text) return "";
+
+    const match = text.match(
+        /\b(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december)\b/i
+    );
+
+    if (!match) return "";
+
+    const day = parseInt(match[1], 10);
+    const monthText = match[2].toLowerCase();
+
+    const months = {
+        jan: "January",
+        january: "January",
+        feb: "February",
+        february: "February",
+        mar: "March",
+        march: "March",
+        apr: "April",
+        april: "April",
+        may: "May",
+        jun: "June",
+        june: "June",
+        jul: "July",
+        july: "July",
+        aug: "August",
+        august: "August",
+        sep: "September",
+        sept: "September",
+        september: "September",
+        oct: "October",
+        october: "October",
+        nov: "November",
+        november: "November",
+        dec: "December",
+        december: "December",
+    };
+
+    return `${day} ${months[monthText]} ${new Date().getFullYear()}`;
+};
+
+const departmentCode =
+    facultyDepartment.toLowerCase() === "computer science"
+        ? "CS"
+        : facultyDepartment.toLowerCase() === "information technology" ||
+          facultyDepartment.toLowerCase() === "it"
+            ? "IT"
+            : facultyDepartment
+                .replace(/[^a-zA-Z]/g, "")
+                .slice(0, 2)
+                .toUpperCase();
+
+
+    useEffect(() => {
+        const fetchFacultyProfile = async () => {
+            try {
+                const response = await api.get("/faculty/profile");
+    
+                setFacultyDepartment(response.data.department || "");
+            } catch (error) {
+                console.error("Failed to fetch faculty profile:", error);
+            }
+        };
+    
+        fetchFacultyProfile();
+    }, []);
+
+   useEffect(() => {
+    const loadReferenceNumber = async () => {
+    
+        // Prevent duplicate API requests
+        if (referenceRequestStarted.current) {
+            return;
+        }
+    
+        // Already generated for this document
+        if (passedReferenceNumber) {
+            setReferenceNumber(passedReferenceNumber);
+            return;
+        }
+    
+        referenceRequestStarted.current = true;
+
+        // Check saved draft
+        const savedData = sessionStorage.getItem(
+            "studentForumDraft"
+        );
+
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+
+                if (data.referenceNumber) {
+                    setReferenceNumber(data.referenceNumber);
+                    return;
+                }
+            } catch (error) {
+                console.error(
+                    "Error reading saved reference number:",
+                    error
+                );
+            }
+        }
+
+        // Generate a new reference number ONLY for a new document
+        try {
+            const response = await api.get(
+                "/student-forum-ai/next-reference"
+            );
+
+            const newReferenceNumber =
+                response.data.referenceNumber;
+
+            setReferenceNumber(newReferenceNumber);
+
+            // Save it so returning to Preview does not generate another one
+            const existingDraft =
+                sessionStorage.getItem(
+                    "studentForumDraft"
+                );
+
+            const draft = existingDraft
+                ? JSON.parse(existingDraft)
+                : {};
+
+            sessionStorage.setItem(
+                "studentForumDraft",
+                JSON.stringify({
+                    ...draft,
+                    referenceNumber: newReferenceNumber,
+                })
+            );
+        } catch (error) {
+            console.error(
+                "Failed to fetch reference number:",
+                error
+            );
+        }
+    };
+
+    loadReferenceNumber();
+}, [passedReferenceNumber]);
+
+const updatedContent = content
+    // Remove college name from AI-generated content
+    .replace(
+        /\[COLLEGE NAME\]/gi,
+        ""
+    )
+    .replace(
+        /\[(?:NAME OF THE INSTITUTION \/ COLLEGE|COLLEGE \/ INSTITUTION NAME)\]/gi,
+        ""
+    )
+
+    // Remove department from AI-generated content
+    .replace(
+        /\[\s*DEPARTMENT\s+NAME\s*\]/gi,
+        ""
+    )
+
+    // Remove reference number from AI-generated content
+    .replace(
+        /\[\s*Insert\s+Reference\s+Number\s*\]/gi,
+        ""
+    )
+    .replace(
+        /\[INSERT REFERENCE NUMBER\]/gi,
+        ""
+    )
+
+    // Remove date from AI-generated content
+    .replace(
+        /\[\s*Insert\s+Date\s+of\s+Issue\s*\]/gi,
+        ""
+    )
+    .replace(
+        /\[INSERT DATE OF ISSUE\]/gi,
+        ""
+    )
+
+    // Remove standalone NOTICE because React will display it separately
+    .replace(
+        /^\s*NOTICE\s*$/gim,
+        ""
+    )
+
+    // Remove standalone STUDENT FORUM heading
+    .replace(
+        /^#{1,6}\s*STUDENT FORUM\s*$/gim,
+        ""
+    )
+    // Remove empty duplicate reference/date metadata
+    .replace(
+        /Ref\.\s*No\.\s*:\s*Date\s*:/gi,
+        ""
+    );
+
 
     const searchParams = new URLSearchParams(location.search);
 
@@ -41,15 +263,22 @@ const finalTerm =
         );
     }
 
- const handleBackToEdit = () => {
+const handleBackToEdit = () => {
     navigate("/student-forum-ai/create", {
-      state: {
-          content,
-          session: finalSession,
-          term: finalTerm,
-      },
+        state: {
+            content,
+            title,
+            category,
+            documentType,
+            session: finalSession,
+            term: finalTerm,
+            prompt,
+            issueDate,
+            referenceNumber,
+            imageData,
+        },
     });
- };
+};
 
     const handleDownloadPDF = async () => {
         const element = document.querySelector(".rajsioni-document");
@@ -94,6 +323,15 @@ const finalTerm =
     };
 
 const handleSaveDocument = async () => {
+
+    console.log("PREVIEW STATE:", {
+        title,
+        category,
+        content,
+        session: finalSession,
+        term: finalTerm,
+    });
+    
     try {
         if (!finalSession) {
             alert("Session is required");
@@ -102,6 +340,11 @@ const handleSaveDocument = async () => {
 
         if (!finalTerm) {
             alert("Term is required");
+            return;
+        }
+
+        if (!referenceNumber) {
+            alert("Reference number is not available yet. Please wait.");
             return;
         }
 
@@ -156,15 +399,9 @@ const handleSaveDocument = async () => {
             `Student_Forum_${finalSession}_${finalTerm}.pdf`
         );
 
-        formData.append(
-            "title",
-            `Student Forum - ${finalSession} - ${finalTerm}`
-        );
+        formData.append("title", title);
 
-        formData.append(
-            "description",
-            "AI generated Student Forum document"
-        );
+        formData.append("category", category);
 
         formData.append(
             "subject",
@@ -173,7 +410,7 @@ const handleSaveDocument = async () => {
 
         formData.append(
             "department",
-            "Information Technology"
+            facultyDepartment
         );
 
         formData.append(
@@ -185,8 +422,15 @@ const handleSaveDocument = async () => {
             "term",
             finalTerm
         );
+        
+        formData.append(
+            "referenceNumber",
+            referenceNumber
+        );
 
         console.log("Saving PDF:", {
+            title,
+            category,
             session: finalSession,
             term: finalTerm,
         });
@@ -202,6 +446,11 @@ const handleSaveDocument = async () => {
         );
 
         if (response.data.success) {
+            // Document is now permanently saved.
+            // Clear the temporary draft so the next new document
+            // receives the next reference number.
+            sessionStorage.removeItem("studentForumDraft");
+        
             alert(
                 "PDF saved successfully to Repository!"
             );
@@ -225,6 +474,24 @@ const handleSaveDocument = async () => {
     }
 };
 
+const finalIssueDate =
+    issueDate ||
+    (() => {
+        const savedData = sessionStorage.getItem(
+            "studentForumDraft"
+        );
+
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                return data.issueDate || "";
+            } catch {
+                return "";
+            }
+        }
+
+        return "";
+})();
     return (
         <div className="student-forum-preview-page">
 
@@ -270,7 +537,12 @@ const handleSaveDocument = async () => {
                         <div className="orange-line"></div>
 
                         <h2>
-                            Department of Information Technology
+                            Department of{" "}
+                            {facultyDepartment === "IT"
+                                ? " Information Technology"
+                                : ` ${facultyDepartment
+                                    .toLowerCase()
+                                    .replace(/\b\w/g, (char) => char.toUpperCase())}`}
                         </h2>
 
                         <div className="orange-line"></div>
@@ -282,26 +554,118 @@ const handleSaveDocument = async () => {
                 {/* ================= BODY ================= */}
                 <div className="rajsioni-body">
 
-                 <div className="document-meta">
-                     <span>
-                         Session {finalSession} — Term: {finalTerm}
-                     </span>
-                 </div>
+                    <div className="document-meta">
+                        <div>
+                            Ref. No.: {referenceNumber}
+                            <span style={{ marginLeft: "30px" }}>
+                                Date: {finalIssueDate}
+                            </span>
+                        </div>
 
-                    <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                        {content}
-                    </ReactMarkdown>
+                        <span>
+                            Session {finalSession} — Term: {finalTerm}
+              
+                        </span>
+                    </div>
+
+                   <div className="student-forum-notice">
+                        {documentType || "NOTICE"}
+                    </div>
                     
+                    {documentType?.toLowerCase() === "application" && (
+                        <div className="application-format">
+                            <p>
+                                <strong>To,</strong>
+                                <br />
+                                The Campus Director,
+                                <br />
+                                GHRCEM, Nagpur.
+                            </p>
+                    
+                            <p>
+                                <strong>Subject: {title}</strong>
+                            </p>
+                    
+                            <p>
+                                <strong>Respected Sir,</strong>
+                            </p>
+                        </div>
+                        )}
+                    
+                    <div className="document-body-content">
+                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                            {updatedContent}
+                        </ReactMarkdown>
+                    </div>
+                    
+                    {documentType?.toLowerCase() === "application" && (
+                        <p className="application-thanks">
+                            Thanking you.
+                        </p>
+                    )}
+                                        
                     {imageData && (
                         <div className="uploaded-document-image">
-                            <img
-                                src={imageData}
-                                alt="Uploaded document reference"
-                            />
+                    <Rnd
+                        size={{
+                            width: imageWidth,
+                            height: imageHeight,
+                        }}
+                        style={{
+                            position: "relative",
+                            margin: "0 auto",
+                        }}
+                        lockAspectRatio
+                        minWidth={120}
+                        minHeight={80}
+                        onResize={(e, direction, ref) => {
+                            setImageWidth(ref.offsetWidth);
+                            setImageHeight(ref.offsetHeight);
+                        }}
+                        enableResizing={{
+                            top: false,
+                            right: false,
+                            bottom: false,
+                            left: false,
+                            topRight: false,
+                            bottomRight: true,
+                            bottomLeft: false,
+                            topLeft: false,
+                        }}
+                    >
+                        <img
+                            src={imageData}
+                            alt="Uploaded document reference"
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "contain",
+                                display: "block",
+                            }}
+                        />
+                    </Rnd>
                         </div>
                     )}
-
                 </div>
+                {["report", "application","circular"].includes(
+                        documentType?.toLowerCase()
+                    ) && (
+                    <div className="document-signatures">
+                        <div className="signature-block">
+                            <strong>Mr. Ashish Kakne</strong>
+                            <span>
+                                {documentType?.toLowerCase() === "application"
+                                    ? "T&P Co-ordinator"
+                                    : "Faculty In-charge"}
+                            </span>
+                        </div>
+                
+                        <div className="signature-block">
+                            <strong>Dr. Sonali Ridhorkar</strong>
+                            <span>HOD</span>
+                        </div>
+                    </div>
+                )}
 
                       {/* ================= FOOTER ================= */}
                       <div className="rajsioni-footer">

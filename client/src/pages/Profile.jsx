@@ -1,156 +1,267 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../services/api";
 
 const Profile = () => {
     const [faculty, setFaculty] = useState(null);
-    const [facultyCount, setFacultyCount] = useState(0);
-    const [documentCount, setDocumentCount] = useState(0);
-    const [activeFaculty, setActiveFaculty] = useState(0);
-    
+    const [activeTab, setActiveTab] = useState("basic");
+    const [uploading, setUploading] = useState(false);
+
+    const fileInputRef = useRef(null);
+
     useEffect(() => {
-    const fetchProfile = async () => {
+        const fetchProfile = async () => {
+            try {
+                const response = await api.get("/faculty/profile");
+                setFaculty(response.data);
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        };
+
+        fetchProfile();
+    }, []);
+
+    const handlePhotoChange = async (event) => {
+        const file = event.target.files[0];
+
+        if (!file) return;
+
+        const allowedTypes = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp",
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            alert("Please select a JPG, JPEG, PNG or WEBP image.");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("Profile photo must be less than 5 MB.");
+            return;
+        }
+
         try {
-            const response = await api.get("/faculty/profile");
-            setFaculty(response.data);
-            const facultyResponse = await api.get("/faculty/all");
-            const repositoryResponse = await api.get("/repository");
-            
-            setFacultyCount(facultyResponse.data.length);
-            setDocumentCount(repositoryResponse.data.length);
-            setActiveFaculty(
-            facultyResponse.data.filter((member) => member.isActive).length
-        );
+            setUploading(true);
+
+            const formData = new FormData();
+            formData.append("profilePhoto", file);
+
+            const response = await api.put(
+                "/faculty/profile/photo",
+                formData
+            );
+
+            setFaculty((previous) => ({
+                ...previous,
+                profilePhoto: response.data.profilePhoto,
+            }));
+
+            alert("Profile photo updated successfully.");
         } catch (error) {
-            console.error("Error fetching profile:", error);
+            console.error("Profile photo upload error:", error);
+
+            alert(
+                error.response?.data?.message ||
+                "Failed to upload profile photo."
+            );
+        } finally {
+            setUploading(false);
+
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
         }
     };
 
-    fetchProfile();
- }, []);
+    if (!faculty) {
+        return (
+            <div className="profile-page">
+                <h1>My Profile</h1>
+                <p>Loading profile...</p>
+            </div>
+        );
+    }
+
+    const profilePhotoUrl = faculty.profilePhoto
+        ? `http://localhost:5000${faculty.profilePhoto}`
+        : null;
 
     return (
-    <div className="profile-page">
-       <h1>
-           {faculty?.role === "admin" ? "Admin Profile" : "Faculty Profile"}
-       </h1>
+        <div className="profile-page">
+            <h1>My Profile</h1>
 
-        {!faculty ? (
-            <p>Loading profile...</p>
-        ) : (
-            <div className="profile-card">
+            <div className="profile-header-card">
+                <div className="profile-photo-wrapper">
+                    <div className="profile-page-avatar">
+                        {profilePhotoUrl ? (
+                            <img
+                                src={profilePhotoUrl}
+                                alt="Profile"
+                            />
+                        ) : (
+                            <span>👤</span>
+                        )}
+                    </div>
 
-                <div className="profile-page-avatar">
-                    👤
+                    <button
+                        type="button"
+                        className="change-photo-button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                    >
+                        {uploading ? "Uploading..." : "Change Photo"}
+                    </button>
+
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/webp"
+                        onChange={handlePhotoChange}
+                        hidden
+                    />
                 </div>
 
-                <h2>{faculty.name}</h2>
-                 <p className="profile-role">
-                     {faculty.role === "admin"
-                         ? "Administrator"
-                         : faculty.designation}
-                 </p>
+                <div className="profile-header-info">
+                    <h2>{faculty.name?.toUpperCase()}</h2>
 
-                <div className="profile-details">
-
-                    <div>
-                        <strong>Email</strong>
-                        <p>{faculty.email}</p>
-                    </div>
-
-                    <div>
-                        <strong>Department</strong>
-                        <p>{faculty.department}</p>
-                    </div>
-
-                    <div>
-                       <strong>Registration ID</strong>
-                       <p>{faculty.employeeId}</p>
-                    </div>
-
-                    <div>
-                        <strong>Role</strong>
-                        <p>{faculty.role}</p>
-                    </div>
-
-                    <div>
-                        <strong>Status</strong>
-                        <p>
-                            {faculty.isActive ? "Active" : "Inactive"}
-                        </p>
-                    </div>
-
+                    <p>
+                        {faculty.role === "admin"
+                            ? "Administrator"
+                            : faculty.designation || "Faculty"}
+                    </p>
                 </div>
-                   <div className="portfolio-section">
-                   
-                       <div className="portfolio-header">
-                           <h2>
-                               {faculty.role === "admin"
-                                   ? "Administration"
-                                   : "Faculty Portfolio"}
-                           </h2>
-                   
-                           <span>
-                               {faculty.role === "admin"
-                                   ? "Department Management"
-                                   : "Professional Information"}
-                           </span>
-                       </div>
-                   
-                       <div className="portfolio-grid">
-                   
-                           {faculty.role === "admin" ? (
-                               <>
-                                   <div className="portfolio-item">
-                                       <h3>Faculty Managed</h3>
-                                       <p>{facultyCount}</p>
-                                   </div>
-                   
-                                   <div className="portfolio-item">
-                                       <h3>Documents Managed</h3>
-                                       <p>{documentCount}</p>
-                                   </div>
-                   
-                                   <div className="portfolio-item">
-                                       <h3>Active Faculty</h3>
-                                       <p>{activeFaculty}</p>
-                                   </div>
-                   
-                                   <div className="portfolio-item">
-                                       <h3>Department</h3>
-                                       <p>{faculty.department}</p>
-                                   </div>
-                               </>
-                           ) : (
-                               <>
-                                   <div className="portfolio-item">
-                                       <h3>Research Papers</h3>
-                                       <p>0</p>
-                                   </div>
-                   
-                                   <div className="portfolio-item">
-                                       <h3>Publications</h3>
-                                       <p>0</p>
-                                   </div>
-                   
-                                   <div className="portfolio-item">
-                                       <h3>Projects</h3>
-                                       <p>0</p>
-                                   </div>
-                   
-                                   <div className="portfolio-item">
-                                       <h3>Certifications</h3>
-                                       <p>0</p>
-                                   </div>
-                               </>
-                           )}
-                   
-                       </div>
-                   
-                   </div>
-
             </div>
-        )}
-    </div>
-)};
+
+            <div className="profile-tabs">
+                <button
+                    type="button"
+                    className={
+                        activeTab === "basic"
+                            ? "profile-tab active"
+                            : "profile-tab"
+                    }
+                    onClick={() => setActiveTab("basic")}
+                >
+                    Basic Information
+                </button>
+
+                <button
+                    type="button"
+                    className={
+                        activeTab === "login"
+                            ? "profile-tab active"
+                            : "profile-tab"
+                    }
+                    onClick={() => setActiveTab("login")}
+                >
+                    Login Information
+                </button>
+            </div>
+
+            <div className="profile-content">
+                {activeTab === "basic" && (
+                    <fieldset className="profile-info-card">
+                        <legend>Basic Information</legend>
+
+                        <div className="profile-info-row">
+                            <span>Full Name :</span>
+                            <strong>{faculty.name || "--"}</strong>
+                        </div>
+
+                        <div className="profile-info-row">
+                            <span>Date of Birth :</span>
+                            <strong>
+                                {faculty.dateOfBirth || "--"}
+                            </strong>
+                        </div>
+
+                        <div className="profile-info-row">
+                            <span>Gender :</span>
+                            <strong>{faculty.gender || "--"}</strong>
+                        </div>
+
+                        <div className="profile-info-row">
+                            <span>Mobile :</span>
+                            <strong>
+                                {faculty.mobile ||
+                                    faculty.phone ||
+                                    "--"}
+                            </strong>
+                        </div>
+
+                        <div className="profile-info-row">
+                            <span>Personal Email :</span>
+                            <strong>
+                                {faculty.personalEmail ||
+                                    faculty.email ||
+                                    "--"}
+                            </strong>
+                        </div>
+
+                        <div className="profile-info-row">
+                            <span>Institute Email :</span>
+                            <strong>
+                                {faculty.instituteEmail || "--"}
+                            </strong>
+                        </div>
+                    </fieldset>
+                )}
+
+                {activeTab === "login" && (
+                    <>
+                        <div className="profile-security-action">
+                            <Link
+                                to="/change-password"
+                                className="profile-change-password"
+                            >
+                                Change Password
+                            </Link>
+                        </div>
+
+                        <fieldset className="profile-info-card">
+                            <legend>Login Information</legend>
+
+                            <div className="profile-info-row">
+                                <span>User Name :</span>
+                                <strong>
+                                    {faculty.employeeId || "--"}
+                                </strong>
+                            </div>
+
+                            <div className="profile-info-row">
+                                <span>Role :</span>
+                                <strong>
+                                    {faculty.role || "--"}
+                                </strong>
+                            </div>
+
+                            <div className="profile-info-row">
+                                <span>Account Status :</span>
+                                <strong>
+                                    {faculty.isActive
+                                        ? "ACTIVE"
+                                        : "INACTIVE"}
+                                </strong>
+                            </div>
+
+                            <div className="profile-info-row">
+                                <span>OTP Mandatory :</span>
+                                <strong>
+                                    {faculty.otpMandatory
+                                        ? "Yes"
+                                        : "No"}
+                                </strong>
+                            </div>
+                        </fieldset>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
 
 export default Profile;

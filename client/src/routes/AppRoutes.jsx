@@ -57,14 +57,14 @@ const AppRoutes = () => {
 
             {/* ================= REPOSITORY ================= */}
 
-            <Route
-                path="/repository"
-                element={
-                    <AppLayout>
-                        <Repository />
-                    </AppLayout>
-                }
-            />
+<Route
+    path="/repository"
+    element={
+        <AppLayout>
+            <Repository />
+        </AppLayout>
+    }
+/>
 
 
             {/* ================= PROFILE ================= */}
@@ -180,32 +180,34 @@ const AppRoutes = () => {
 
             {/* ================= ADMIN ================= */}
 
-            <Route
-                path="/admin-dashboard"
-                element={
-                    <ProtectedRoute role="admin">
-                        <AdminDashboard />
-                    </ProtectedRoute>
-                }
-            />
+<Route
+    path="/admin-dashboard"
+    element={
+        <AppLayout>
+            <AdminDashboard />
+        </AppLayout>
+    }
+/>
 
-            <Route
-                path="/faculty-management"
-                element={
-                    <ProtectedRoute role="admin">
-                        <FacultyManagement />
-                    </ProtectedRoute>
-                }
-            />
+<Route
+    path="/faculty-management"
+    element={
+        <AppLayout>
+            <FacultyManagement />
+        </AppLayout>
+    }
+/>
 
-            <Route
-                path="/admin-documents"
-                element={
-                    <ProtectedRoute role="admin">
-                        <AdminDocuments />
-                    </ProtectedRoute>
-                }
-            />
+<Route
+    path="/admin-documents"
+    element={
+        <AppLayout>
+            <ProtectedRoute role="admin">
+                <AdminDocuments />
+            </ProtectedRoute>
+        </AppLayout>
+    }
+/>
 
         </Routes>
     );

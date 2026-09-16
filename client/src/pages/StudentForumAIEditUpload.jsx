@@ -1,5 +1,5 @@
 import { useLocation, useSearchParams, useNavigate, } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../services/api";
 
 const StudentForumAIEditUpload = () => {
@@ -19,6 +19,58 @@ const StudentForumAIEditUpload = () => {
     const [editedContent, setEditedContent] = useState("");
     
     const [image, setImage] = useState(null);
+    const [referenceNumber, setReferenceNumber] = useState("");
+    const referenceRequestStarted = useRef(false);
+
+useEffect(() => {
+    const fetchReferencePrefix = async () => {
+        try {
+            const response = await api.get("/faculty/profile");
+
+            const department =
+                response.data.department || "";
+
+            const normalizedDepartment =
+                department.trim().toLowerCase();
+
+            let departmentCode;
+
+            if (
+                normalizedDepartment === "information technology" ||
+                normalizedDepartment === "it"
+            ) {
+                departmentCode = "IT";
+            } else if (
+                normalizedDepartment === "computer science" ||
+                normalizedDepartment === "cs"
+            ) {
+                departmentCode = "CS";
+            } else {
+                departmentCode = normalizedDepartment
+                    .split(/\s+/)
+                    .map((word) => word[0])
+                    .join("")
+                    .toUpperCase();
+            }
+
+            const year = new Date().getFullYear();
+
+            setReferenceNumber(
+                `${departmentCode}/SF/${year}/`
+            );
+        } catch (error) {
+            console.error(
+                "Failed to get reference prefix:",
+                error
+            );
+            setError(
+                "Failed to generate reference number."
+            );
+        }
+    };
+
+    fetchReferencePrefix();
+}, []);
 
    const handleEditWithAI = async () => {
         if (!file) {
@@ -28,6 +80,12 @@ const StudentForumAIEditUpload = () => {
     
         if (!prompt.trim()) {
             setError("Please tell the AI what you want to change.");
+            return;
+        }
+        if (!referenceNumber) {
+            setError(
+                "Reference number is not available yet. Please wait."
+            );
             return;
         }
     
@@ -41,6 +99,7 @@ const StudentForumAIEditUpload = () => {
             formData.append("prompt", prompt);
             formData.append("session", session);
             formData.append("term", term);
+            formData.append("referenceNumber",referenceNumber);
             
             if (image) {
                 formData.append("image", image);
@@ -213,6 +272,7 @@ const StudentForumAIEditUpload = () => {
                                                     semester,
                                                     session,
                                                     term,
+                                                    referenceNumber,
                                                     imageData: reader.result,
                                                 },
                                             }
@@ -229,6 +289,7 @@ const StudentForumAIEditUpload = () => {
                                                 semester,
                                                 session,
                                                 term,
+                                                referenceNumber,
                                                 imageData: null,
                                             },
                                         }

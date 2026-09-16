@@ -8,6 +8,9 @@ const {
 } = require("../services/documentTextService");
 
 const Repository = require("../models/Repository");
+const Notification = require("../models/Notification");
+const Faculty = require("../models/Faculty");
+const ReferenceCounter = require("../models/ReferenceCounter");
 
 
 // ==========================================
@@ -36,16 +39,18 @@ const generateDocument = async (req, res) => {
             });
         }
 
-        const generatedContent =
+        const generatedResult =
             await generateStudentForumDocument(
                 prompt,
                 session,
                 term
             );
-
+        
         res.status(200).json({
             success: true,
-            content: generatedContent,
+            content: generatedResult.content,
+            title: generatedResult.title,
+            category: generatedResult.category,
         });
 
     } catch (error) {
@@ -73,6 +78,7 @@ const editUploadedDocument = async (req, res) => {
             prompt,
             session,
             term,
+            referenceNumber,
         } = req.body;
 
         // Document is required
@@ -102,6 +108,12 @@ const editUploadedDocument = async (req, res) => {
         if (!term) {
             return res.status(400).json({
                 message: "Term is required",
+            });
+        }
+
+        if (!referenceNumber) {
+            return res.status(400).json({
+                message: "Reference number is required",
             });
         }
 
@@ -153,6 +165,82 @@ const editUploadedDocument = async (req, res) => {
     }
 };
 
+// ==========================================
+// GET NEXT REFERENCE NUMBER
+// ==========================================
+
+const getNextReferenceNumber = async (req, res) => {
+    try {
+        const faculty = await Faculty.findById(req.user.id).select(
+            "department"
+        );
+
+        if (!faculty) {
+            return res.status(404).json({
+                message: "Faculty not found",
+            });
+        }
+
+        if (!faculty.department) {
+            return res.status(400).json({
+                message: "Faculty department is not set",
+            });
+        }
+
+        const year = new Date().getFullYear();
+
+const counter = await ReferenceCounter.findOne({
+    faculty: req.user.id,
+    year,
+});
+
+const nextSequence = counter ? counter.sequence + 1 : 1;
+
+const normalizedDepartment = faculty.department
+    .trim()
+    .toLowerCase();
+
+let departmentCode;
+
+if (
+    normalizedDepartment === "information technology" ||
+    normalizedDepartment === "it"
+) {
+    departmentCode = "IT";
+} else if (
+    normalizedDepartment === "computer science" ||
+    normalizedDepartment === "cs"
+) {
+    departmentCode = "CS";
+} else {
+    departmentCode = normalizedDepartment
+        .split(/\s+/)
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase();
+}
+
+        const referenceNumber =
+    `${departmentCode}/SF/${year}/${String(nextSequence).padStart(3, "0")}`;
+
+        res.status(200).json({
+            success: true,
+            referenceNumber,
+        });
+
+    } catch (error) {
+        console.error(
+            "Get Student Forum Reference Number Error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate reference number",
+        });
+    }
+};
+
 
 // ==========================================
 // SAVE DOCUMENT TO REPOSITORY
@@ -162,11 +250,12 @@ const saveDocumentToRepository = async (req, res) => {
     try {
         const {
             title,
-            description,
+            category,
             subject,
             department,
             session,
             term,
+            referenceNumber,
         } = req.body;
 
         const normalizedTerm = term?.trim().toLowerCase();
@@ -174,6 +263,24 @@ const saveDocumentToRepository = async (req, res) => {
         if (!["even", "odd"].includes(normalizedTerm)) {
             return res.status(400).json({
                 message: "Term must be Even or Odd",
+            });
+        }
+
+        const faculty = await Faculty.findById(req.user.id).select(
+            "department name"
+        );
+        
+        if (!faculty) {
+            return res.status(404).json({
+                message: "Faculty not found",
+            });
+        }
+        
+        const facultyDepartment = faculty.department;
+        
+        if (!facultyDepartment) {
+            return res.status(400).json({
+                message: "Faculty department is not set",
             });
         }
         
@@ -208,29 +315,63 @@ const saveDocumentToRepository = async (req, res) => {
             });
         }
 
+        const year = new Date().getFullYear();
+
+        const counter = await ReferenceCounter.findOneAndUpdate(
+            {
+                faculty: req.user.id,
+                year,
+            },
+            {
+                $inc: { sequence: 1 },
+            },
+            {
+                new: true,
+                upsert: true,
+            }
+        );
+        
+        const normalizedDepartment =
+            facultyDepartment.trim().toLowerCase();
+        
+        let departmentCode;
+        
+        if (
+            normalizedDepartment === "information technology" ||
+            normalizedDepartment === "it"
+        ) {
+            departmentCode = "IT";
+        } else if (
+            normalizedDepartment === "computer science" ||
+            normalizedDepartment === "cs"
+        ) {
+            departmentCode = "CS";
+        } else {
+            departmentCode = normalizedDepartment
+                .split(/\s+/)
+                .map((word) => word[0])
+                .join("")
+                .toUpperCase();
+        }
+        
+        const finalReferenceNumber =
+            `${departmentCode}/SF/${year}/${String(counter.sequence).padStart(3, "0")}`;
+
         // Create Repository record
         const repository = await Repository.create({
-            title:
-                title ||
-                `Student Forum - ${session} - ${term}`,
-
-            description:
-                description ||
-                "AI generated Student Forum document",
+            title: title,
 
             subject:
                 subject ||
                 "Student Forum",
 
-            department:
-                department ||
-                "Information Technology",
+            department: facultyDepartment,
 
             session,
 
             term: finalTerm,
 
-            category: "Other",
+            category: category,
 
             fileName: req.file.filename,
 
@@ -239,7 +380,20 @@ const saveDocumentToRepository = async (req, res) => {
             fileType: "application/pdf",
 
             uploadedBy: req.user.id,
+
+            referenceNumber: finalReferenceNumber,
         });
+        if (req.user.role === "faculty") {
+            const faculty = await Faculty.findById(req.user.id).select("name");
+        
+            await Notification.create({
+                title: "New Document Uploaded",
+                message: `${faculty?.name || "Faculty"} uploaded "${repository.title}" — Session ${repository.session}, Term ${repository.term}`,
+                type: "Document Upload",
+                documentId: repository._id,
+                recipientRole: "admin",
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -270,4 +424,5 @@ module.exports = {
     generateDocument,
     editUploadedDocument,
     saveDocumentToRepository,
+    getNextReferenceNumber,
 };

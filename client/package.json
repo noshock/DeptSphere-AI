@@ -19,6 +19,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-markdown": "^10.1.0",
+    "react-rnd": "^10.5.3",
     "react-router-dom": "^7.18.2",
     "rehype-raw": "^7.0.0"
   },

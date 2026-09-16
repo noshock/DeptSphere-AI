@@ -6,25 +6,50 @@ const Header = () => {
     const [showProfile, setShowProfile] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [reminders, setReminders] = useState([]);
+    const [faculty, setFaculty] = useState(null);
 
-    const fetchReminders = async () => {
+    const fetchNotifications = async () => {
         try {
-            const response = await api.get("/reminders");
-            setReminders(response.data.reminders || []);
+            if (faculty?.role === "admin") {
+                const response = await api.get("/notifications");
+    
+                setReminders(response.data.notifications || []);
+            } else {
+                const response = await api.get("/reminders");
+    
+                setReminders(response.data.reminders || []);
+            }
         } catch (error) {
-            console.error("Failed to fetch reminders:", error);
+            console.error("Failed to fetch notifications:", error);
         }
     };
 
     useEffect(() => {
-        fetchReminders();
+        const fetchProfile = async () => {
+            try {
+                const response = await api.get("/faculty/profile");
+                setFaculty(response.data);
+            } catch (error) {
+                console.error("Failed to fetch profile:", error);
+            }
+        };
+    
+        fetchProfile();
     }, []);
 
+   useEffect(() => {
+        if (faculty) {
+            fetchNotifications();
+        }
+    }, [faculty]);
+
     const unreadCount = reminders.filter(
-        (reminder) =>
-            reminder.status !== "Completed" &&
-            !reminder.isRead
+        (item) => !item.isRead
     ).length;
+
+    const profilePhotoUrl = faculty?.profilePhoto
+        ? `http://localhost:5000${faculty.profilePhoto}`
+        : null;
 
     return (
         <header className="top-header">
@@ -60,13 +85,6 @@ const Header = () => {
                 </div>
 
 
-                {/* AI */}
-
-                <span className="ai-icon">
-                    ✨
-                </span>
-
-
                 {/* PROFILE */}
 
                 <div
@@ -75,10 +93,16 @@ const Header = () => {
                         setShowProfile(!showProfile)
                     }
                 >
-                    <span>Welcome PRAJWAL</span>
+                    <span>
+                        Welcome {faculty?.role === "admin" ? "ADMIN" : faculty?.name?.toUpperCase()}
+                    </span>
 
                     <span className="profile-avatar">
-                        👤
+                        {profilePhotoUrl ? (
+                            <img src={profilePhotoUrl} alt="Profile" />
+                        ) : (
+                            "👤"
+                        )}
                     </span>
 
                     <span>▼</span>
@@ -87,101 +111,185 @@ const Header = () => {
 
                 {/* NOTIFICATION DROPDOWN */}
 
-                {showNotifications && (
-                    <div className="notification-dropdown">
+{showNotifications && (
+    <div className="notification-dropdown">
 
-                        <div className="notification-dropdown-header">
-                            <strong>Notifications</strong>
+        <div className="notification-dropdown-header">
+            <strong>Notifications</strong>
 
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowNotifications(false);
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setShowNotifications(false);
+                }}
+            >
+                ✕
+            </button>
+        </div>
+
+        {faculty?.role === "admin" ? (
+
+            /* ================= ADMIN NOTIFICATIONS ================= */
+
+            reminders.length === 0 ? (
+                <div className="empty-notifications">
+                    <div>✓</div>
+                    <p>No notifications</p>
+                    <span>You're all caught up.</span>
+                </div>
+            ) : (
+                <div className="notification-list">
+
+                    {reminders
+                        .slice(0, 5)
+                        .map((notification) => (
+                            <div
+                                className={`notification-item ${
+                                    !notification.isRead
+                                        ? "unread"
+                                        : ""
+                                }`}
+                                key={notification._id}
+                                onClick={async () => {
+                                    try {
+                                        await api.put(
+                                            `/notifications/${notification._id}/read`
+                                        );
+
+                                        fetchNotifications();
+                                    } catch (error) {
+                                        console.error(
+                                            "Failed to mark notification as read:",
+                                            error
+                                        );
+                                    }
                                 }}
                             >
-                                ✕
-                            </button>
-                        </div>
 
-                        {reminders.filter(
+                                <div className="notification-item-icon">
+                                    🔔
+                                </div>
+
+                                <div className="notification-item-content">
+
+                                    <strong>
+                                        {notification.title}
+                                    </strong>
+
+                                    <span>
+                                        {notification.message}
+                                    </span>
+
+                                    <small>
+                                        {new Date(
+                                            notification.createdAt
+                                        ).toLocaleString("en-IN", {
+                                            day: "numeric",
+                                            month: "short",
+                                            year: "numeric",
+                                            hour: "numeric",
+                                            minute: "2-digit",
+                                        })}
+                                    </small>
+
+                                </div>
+
+                                {!notification.isRead && (
+                                    <span className="unread-dot"></span>
+                                )}
+
+                            </div>
+                        ))}
+
+                </div>
+            )
+
+        ) : (
+
+            /* ================= FACULTY REMINDERS ================= */
+
+            reminders.filter(
+                (reminder) =>
+                    reminder.status !== "Completed"
+            ).length === 0 ? (
+                <div className="empty-notifications">
+                    <div>✓</div>
+                    <p>No notifications</p>
+                    <span>You're all caught up.</span>
+                </div>
+            ) : (
+                <div className="notification-list">
+
+                    {reminders
+                        .filter(
                             (reminder) =>
                                 reminder.status !== "Completed"
-                        ).length === 0 ? (
-                            <div className="empty-notifications">
-                                <div>✓</div>
-                                <p>No notifications</p>
-                                <span>
-                                    You're all caught up.
-                                </span>
-                            </div>
-                        ) : (
-                            <div className="notification-list">
+                        )
+                        .slice(0, 5)
+                        .map((reminder) => (
+                            <div
+                                className={`notification-item ${
+                                    !reminder.isRead
+                                        ? "unread"
+                                        : ""
+                                }`}
+                                key={reminder._id}
+                                onClick={async () => {
+                                    try {
+                                        await api.put(
+                                            `/reminders/${reminder._id}/read`
+                                        );
 
-                                {reminders
-                                    .filter(
-                                        (reminder) =>
-                                            reminder.status !==
-                                            "Completed"
-                                    )
-                                    .slice(0, 5)
-                                    .map((reminder) => (
-                                        <div
-                                            className={`notification-item ${
-                                                !reminder.isRead
-                                                    ? "unread"
-                                                    : ""
-                                            }`}
-                                            key={reminder._id}
-                                            onClick={async () => {
-                                                try {
-                                                    await api.put(
-                                                        `/reminders/${reminder._id}/read`
-                                                    );
+                                        fetchNotifications();
+                                    } catch (error) {
+                                        console.error(
+                                            "Failed to mark reminder as read:",
+                                            error
+                                        );
+                                    }
+                                }}
+                            >
 
-                                                    fetchReminders();
-                                                } catch (error) {
-                                                    console.error(
-                                                        "Failed to mark notification as read:",
-                                                        error
-                                                    );
-                                                }
-                                            }}
-                                        >
-                                            <div className="notification-item-icon">
-                                                🔔
-                                            </div>
+                                <div className="notification-item-icon">
+                                    🔔
+                                </div>
 
-                                            <div className="notification-item-content">
-                                                <strong>
-                                                    {reminder.title}
-                                                </strong>
+                                <div className="notification-item-content">
 
-                                                <span>
-                                                    Due{" "}
-                                                    {new Date(
-                                                        reminder.dueDate
-                                                    ).toLocaleDateString(
-                                                        "en-IN",
-                                                        {
-                                                            day: "numeric",
-                                                            month: "short",
-                                                            year: "numeric",
-                                                        }
-                                                    )}
-                                                </span>
-                                            </div>
+                                    <strong>
+                                        {reminder.title}
+                                    </strong>
 
-                                            {!reminder.isRead && (
-                                                <span className="unread-dot"></span>
-                                            )}
-                                        </div>
-                                    ))}
+                                    <span>
+                                        Due{" "}
+                                        {new Date(
+                                            reminder.dueDate
+                                        ).toLocaleDateString(
+                                            "en-IN",
+                                            {
+                                                day: "numeric",
+                                                month: "short",
+                                                year: "numeric",
+                                            }
+                                        )}
+                                    </span>
+
+                                </div>
+
+                                {!reminder.isRead && (
+                                    <span className="unread-dot"></span>
+                                )}
 
                             </div>
-                        )}
+                        ))}
 
-                    </div>
-                )}
+                </div>
+            )
+
+        )}
+
+    </div>
+)}
 
 
                     {/* PROFILE DROPDOWN */}
@@ -192,12 +300,23 @@ const Header = () => {
                             <div className="profile-dropdown-header">
                     
                                 <div className="profile-dropdown-avatar">
-                                    👤
+                                    {profilePhotoUrl ? (
+                                        <img src={profilePhotoUrl} alt="Profile" />
+                                    ) : (
+                                        "👤"
+                                    )}
                                 </div>
                     
                                 <div>
-                                    <strong>PRAJWAL</strong>
-                                    <span>Faculty</span>
+                                    <strong>
+                                        {faculty?.name?.toUpperCase() || "USER"}
+                                    </strong>
+                                    
+                                    <span>
+                                        {faculty?.role === "admin"
+                                            ? "Administrator"
+                                            : faculty?.designation || "Faculty"}
+                                    </span>
                                 </div>
                     
                             </div>

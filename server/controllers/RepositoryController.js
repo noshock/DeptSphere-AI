@@ -1,4 +1,6 @@
 const Repository = require("../models/Repository");
+const Notification = require("../models/Notification");
+const Faculty = require("../models/Faculty");
 
 const uploadFile = async (req, res) => {
     try {
@@ -31,7 +33,19 @@ const uploadFile = async (req, res) => {
             fileType: req.file.mimetype,
             uploadedBy: req.user.id,
         });
+if (req.user.role === "faculty") {
+    const faculty = await Faculty.findById(req.user.id).select("name");
 
+    const notification = await Notification.create({
+        title: "New Document Uploaded",
+        message: `${faculty?.name || "Faculty"} uploaded "${title}" — Session ${session}, Term ${term}`,
+        type: "Document Upload",
+        documentId: repository._id,
+        recipientRole: "admin",
+    });
+
+    console.log("ADMIN NOTIFICATION CREATED:", notification._id);
+}++
         res.status(201).json({
             message: "File uploaded successfully",
             repository,
@@ -46,7 +60,14 @@ const uploadFile = async (req, res) => {
 
 const getAllFiles = async (req, res) => {
     try {
-        const files = await Repository.find()
+        const filter = {};
+
+        // Faculty can only see their own documents
+        if (req.user.role === "faculty") {
+            filter.uploadedBy = req.user.id;
+        }
+
+        const files = await Repository.find(filter)
             .populate("uploadedBy", "name email department")
             .sort({ createdAt: -1 });
 
@@ -69,6 +90,16 @@ const deleteFile = async (req, res) => {
             });
         }
 
+        // Faculty can only delete their own documents
+        if (
+            req.user.role === "faculty" &&
+            String(repository.uploadedBy) !== String(req.user.id)
+        ) {
+            return res.status(403).json({
+                message: "You are not authorized to delete this document",
+            });
+        }
+
         const fs = require("fs");
 
         if (fs.existsSync(repository.fileUrl)) {
@@ -88,9 +119,9 @@ const deleteFile = async (req, res) => {
     }
 };
 
-        const updateFile = async (req, res) => {
-            try {
-               const {
+const updateFile = async (req, res) => {
+    try {
+        const {
             title,
             description,
             subject,
@@ -105,6 +136,16 @@ const deleteFile = async (req, res) => {
         if (!repository) {
             return res.status(404).json({
                 message: "File not found",
+            });
+        }
+
+        // Faculty can only update their own documents
+        if (
+            req.user.role === "faculty" &&
+            String(repository.uploadedBy) !== String(req.user.id)
+        ) {
+            return res.status(403).json({
+                message: "You are not authorized to update this document",
             });
         }
 
@@ -134,12 +175,20 @@ const searchFiles = async (req, res) => {
     try {
         const { title } = req.query;
 
-        const files = await Repository.find({
+        const filter = {
             title: {
                 $regex: title,
                 $options: "i",
             },
-        }).populate("uploadedBy", "name email");
+        };
+
+        // Faculty can only search their own documents
+        if (req.user.role === "faculty") {
+            filter.uploadedBy = req.user.id;
+        }
+
+        const files = await Repository.find(filter)
+            .populate("uploadedBy", "name email");
 
         res.status(200).json(files);
 
@@ -162,6 +211,11 @@ const filterBySession = async (req, res) => {
 
         if (term) {
             filter.term = term;
+        }
+
+        // Faculty can only see their own documents
+        if (req.user.role === "faculty") {
+            filter.uploadedBy = req.user.id;
         }
 
         const files = await Repository.find(filter)

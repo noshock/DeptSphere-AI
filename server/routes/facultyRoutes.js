@@ -5,7 +5,45 @@ const bcrypt = require("bcryptjs");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const Faculty = require("../models/Faculty");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+const profilePhotoDir = path.join(__dirname, "../uploads/profile");
 
+if (!fs.existsSync(profilePhotoDir)) {
+    fs.mkdirSync(profilePhotoDir, { recursive: true });
+}
+
+const profilePhotoStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, profilePhotoDir);
+    },
+    filename: (req, file, cb) => {
+        const extension = path.extname(file.originalname);
+        cb(null, `profile-${req.user.id}${extension}`);
+    },
+});
+
+const uploadProfilePhoto = multer({
+    storage: profilePhotoStorage,
+    limits: {
+        fileSize: 5 * 1024 * 1024,
+    },
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp",
+        ];
+
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Only JPG, JPEG, PNG and WEBP images are allowed."));
+        }
+    },
+});
 router.get("/profile", authMiddleware, async (req, res) => {
     try {
         const faculty = await Faculty.findById(req.user.id).select("-password");
@@ -24,6 +62,41 @@ router.get("/profile", authMiddleware, async (req, res) => {
         });
     }
 });
+router.put(
+    "/profile/photo",
+    authMiddleware,
+    uploadProfilePhoto.single("profilePhoto"),
+    async (req, res) => {
+        try {
+            if (!req.file) {
+                return res.status(400).json({
+                    message: "Please select a profile photo.",
+                });
+            }
+
+            const faculty = await Faculty.findById(req.user.id);
+
+            if (!faculty) {
+                return res.status(404).json({
+                    message: "Faculty not found.",
+                });
+            }
+
+            faculty.profilePhoto = `/uploads/profile/${req.file.filename}`;
+
+            await faculty.save();
+
+            res.status(200).json({
+                message: "Profile photo updated successfully.",
+                profilePhoto: faculty.profilePhoto,
+            });
+        } catch (error) {
+            res.status(500).json({
+                message: error.message,
+            });
+        }
+    }
+);
 router.get("/all", authMiddleware, adminMiddleware, async (req, res) => {
     try {
         const faculty = await Faculty.find()
