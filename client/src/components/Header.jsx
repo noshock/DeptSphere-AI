@@ -51,6 +51,15 @@ const Header = () => {
         ? `http://localhost:5000${faculty.profilePhoto}`
         : null;
 
+const markAllNotificationsRead = () => {
+    setReminders((prev) =>
+        prev.map((item) => ({
+            ...item,
+            isRead: true,
+        }))
+    );
+};
+
     return (
         <header className="top-header">
 
@@ -114,18 +123,27 @@ const Header = () => {
 {showNotifications && (
     <div className="notification-dropdown">
 
-        <div className="notification-dropdown-header">
-            <strong>Notifications</strong>
-
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    setShowNotifications(false);
-                }}
-            >
-                ✕
-            </button>
-        </div>
+            <div className="notification-dropdown-header">
+                <strong>Notifications</strong>
+            
+                <div className="notification-header-actions">
+                    <button
+                        type="button"
+                        className="mark-all-read-button"
+                        onClick={markAllNotificationsRead}
+                    >
+                        Mark all as read
+                    </button>
+            
+                    <button
+                        type="button"
+                        className="notification-close-button"
+                        onClick={() => setShowNotifications(false)}
+                    >
+                        ✕
+                    </button>
+                </div>
+            </div>
 
         {faculty?.role === "admin" ? (
 

@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import api from "../services/api";
 
 const Dashboard = () => {
+    const navigate = useNavigate();
     const [documentCount, setDocumentCount] = useState(0);
     const [recentFiles, setRecentFiles] = useState([]);
 
@@ -30,12 +32,19 @@ const Dashboard = () => {
     const [aiMessages, setAiMessages] = useState([]);
     const [aiInput, setAiInput] = useState("");
     const [aiLoading, setAiLoading] = useState(false);
+    const [showAIMenu, setShowAIMenu] = useState(false);
+    const [attachedDocument, setAttachedDocument] = useState(null);
+    const [attachedImage, setAttachedImage] = useState(null);
+    const [generateImageMode, setGenerateImageMode] = useState(false);
+    const documentInputRef = useRef(null);
+    const imageInputRef = useRef(null);
 
-    const sendAIMessage = async (message = aiInput) => {
-        const text = message.trim();
+const sendAIMessage = async (message = aiInput) => {
+    const text = message.trim();
 
-        if (!text || aiLoading) return;
+    if (!text || aiLoading) return;
 
+        if (generateImageMode) {
         setAiMessages((prev) => [
             ...prev,
             {
@@ -43,12 +52,54 @@ const Dashboard = () => {
                 content: text,
             },
         ]);
-
+    
         setAiInput("");
         setAiLoading(true);
-
+    
         try {
-            const context = `
+            const response = await api.post("/ai/generate-image", {
+                prompt: text,
+            });
+    
+            setAiMessages((prev) => [
+                ...prev,
+                {
+                    role: "assistant",
+                    image: response.data.image,
+                },
+            ]);
+    
+            setGenerateImageMode(false);
+        } catch (error) {
+            console.error("AI image generation error:", error);
+    
+            setAiMessages((prev) => [
+                ...prev,
+                {
+                    role: "assistant",
+                    content: "Sorry, I couldn't generate the image.",
+                },
+            ]);
+        } finally {
+            setAiLoading(false);
+        }
+    
+        return;
+    }
+
+    setAiMessages((prev) => [
+        ...prev,
+        {
+            role: "user",
+            content: text,
+        },
+    ]);
+
+    setAiInput("");
+    setAiLoading(true);
+
+    try {
+        const context = `
 Dashboard Information:
 Total Documents: ${documentCount}
 
@@ -68,33 +119,61 @@ ${recentFiles
 The user is currently using the DOCMitra AI Dashboard.
 `;
 
-            const response = await api.post("/ai/chat", {
+        let response;
+
+            if (attachedDocument) {
+                const formData = new FormData();
+            
+                formData.append("document", attachedDocument);
+                formData.append("prompt", text);
+            
+                response = await api.post(
+                    "/ai-upload/document",
+                    formData
+                );
+            
+                setAttachedDocument(null);
+            } else if (attachedImage) {
+                const formData = new FormData();
+            
+                formData.append("document", attachedImage);
+                formData.append("prompt", text);
+            
+                response = await api.post(
+                    "/ai-upload/document",
+                    formData
+                );
+            
+                setAttachedImage(null);
+            } else {
+            response = await api.post("/ai/chat", {
                 message: text,
                 context,
             });
-
-            setAiMessages((prev) => [
-                ...prev,
-                {
-                    role: "assistant",
-                    content: response.data.reply,
-                },
-            ]);
-        } catch (error) {
-            console.error("AI Assistant error:", error);
-
-            setAiMessages((prev) => [
-                ...prev,
-                {
-                    role: "assistant",
-                    content:
-                        "Sorry, I couldn't process your request right now. Please try again.",
-                },
-            ]);
-        } finally {
-            setAiLoading(false);
         }
-    };
+
+        setAiMessages((prev) => [
+            ...prev,
+            {
+                role: "assistant",
+                content: response.data.reply,
+            },
+        ]);
+    } catch (error) {
+        console.error("AI Assistant error:", error);
+
+        setAiMessages((prev) => [
+            ...prev,
+            {
+                role: "assistant",
+                content:
+                    "Sorry, I couldn't process your request right now. Please try again.",
+            },
+        ]);
+    } finally {
+        setAiLoading(false);
+    }
+};
 
     // ================= REMINDERS =================
 
@@ -110,19 +189,39 @@ The user is currently using the DOCMitra AI Dashboard.
     // ================= INITIAL DATA =================
 
     useEffect(() => {
-        const fetchDocuments = async () => {
-            try {
-                const response = await api.get("/repository");
+const fetchDocuments = async () => {
+    try {
+        const response = await api.get("/repository");
 
-                setDocumentCount(response.data.length);
-                setRecentFiles(response.data.slice(0, 3));
-            } catch (error) {
-                console.error("Error fetching documents:", error);
-            }
-        };
+        const documents = response.data || [];
 
-        fetchDocuments();
-        fetchReminders();
+        // Total documents
+        setDocumentCount(documents.length);
+
+        // Documents uploaded within the last 2 minutes
+        const twoMinutesAgo = Date.now() - 2 * 60 * 1000;
+
+        const recentDocuments = documents.filter((file) => {
+            if (!file.createdAt) return false;
+
+            const createdTime = new Date(file.createdAt).getTime();
+
+            return createdTime >= twoMinutesAgo;
+        });
+
+        setRecentFiles(recentDocuments);
+    } catch (error) {
+        console.error("Error fetching documents:", error);
+    }
+};
+
+            fetchDocuments();
+            fetchReminders();
+             const interval = setInterval(() => {
+            fetchDocuments();
+        }, 10000); // refresh every 10 seconds
+    
+        return () => clearInterval(interval);
     }, []);
 
     // ================= CALENDAR =================
@@ -201,7 +300,11 @@ The user is currently using the DOCMitra AI Dashboard.
 
                             {/* TOTAL DOCUMENTS */}
 
-                            <div className="card">
+                            <div
+                                className="card"
+                                onClick={() => navigate("/repository")}
+                                style={{ cursor: "pointer" }}
+                            >
 
                                 <div className="card-icon">
                                     📄
@@ -228,7 +331,23 @@ The user is currently using the DOCMitra AI Dashboard.
 
                             {/* RECENT UPLOADS */}
 
-                            <div className="card">
+                            <div
+                                className="card"
+                                onClick={() => {
+                                    if (!recentFiles.length) return;
+                            
+                                    const latestFile = [...recentFiles].sort(
+                                        (a, b) =>
+                                            new Date(b.createdAt) -
+                                            new Date(a.createdAt)
+                                    )[0];
+                            
+                                    navigate(
+                                        `/repository?highlight=${latestFile._id}`
+                                    );
+                                }}
+                                style={{ cursor: "pointer" }}
+                            >
 
                                 <div className="card-icon">
                                     ⬆️
@@ -563,9 +682,19 @@ The user is currently using the DOCMitra AI Dashboard.
 
 
                                             <div className="ai-message-content">
-                                                <ReactMarkdown>
-                                                    {message.content}
-                                                </ReactMarkdown>
+                                                {message.image && (
+                                                    <img
+                                                        src={`data:${message.image.mimeType};base64,${message.image.data}`}
+                                                        alt="AI generated"
+                                                        className="ai-generated-image"
+                                                    />
+                                                )}
+                                            
+                                                {message.content && (
+                                                    <ReactMarkdown>
+                                                        {message.content}
+                                                    </ReactMarkdown>
+                                                )}
                                             </div>
 
                                         </div>
@@ -646,9 +775,118 @@ The user is currently using the DOCMitra AI Dashboard.
 
                             {/* AI INPUT */}
 
-                            <div className="ai-input-area">
+                                <div className="ai-input-area">
+                                {attachedDocument && (
+                                    <div className="ai-attached-file">
+                                        <span>📄</span>
+                                
+                                        <span className="ai-attached-file-name">
+                                            {attachedDocument.name}
+                                        </span>
+                                
+                                        <button
+                                            type="button"
+                                            onClick={() => setAttachedDocument(null)}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
 
-                                <textarea
+                                {attachedImage && (
+                                    <div className="ai-attached-file">
+                                        <span>🖼️</span>
+                                
+                                        <span className="ai-attached-file-name">
+                                            {attachedImage.name}
+                                        </span>
+                                
+                                        <button
+                                            type="button"
+                                            onClick={() => setAttachedImage(null)}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
+                                    <button
+                                        type="button"
+                                        className="ai-plus-button"
+                                        onClick={() => setShowAIMenu((prev) => !prev)}
+                                        disabled={aiLoading}
+                                    >
+                                        +
+                                    </button>
+                                
+                                    {showAIMenu && (
+                                        <div className="ai-attachment-menu">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    documentInputRef.current?.click();
+                                                    setShowAIMenu(false);
+                                                }}
+                                            >
+                                                📄 Upload Document
+                                            </button>
+                                
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    imageInputRef.current?.click();
+                                                    setShowAIMenu(false);
+                                                }}
+                                            >
+                                                🖼️ Upload Image
+                                            </button>
+                                
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setGenerateImageMode(true);
+                                                    setShowAIMenu(false);
+                                                }}
+                                            >
+                                                🎨 Generate Image
+                                            </button>
+                                        </div>
+                                    )}
+                                    <input
+                                        ref={documentInputRef}
+                                        type="file"
+                                        accept=".pdf,.doc,.docx,.txt"
+                                        style={{ display: "none" }}
+                                       onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                        
+                                            if (!file) return;
+                                        
+                                            setAttachedDocument(file);
+                                            setShowAIMenu(false);
+                                        
+                                            e.target.value = "";
+                                        }}
+
+                                    />
+                                    <input
+                                        ref={imageInputRef}
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/jpg,image/webp"
+                                        style={{ display: "none" }}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                    
+                                            if (!file) return;
+                                    
+                                            setAttachedImage(file);
+                                            setAttachedDocument(null);
+                                            setShowAIMenu(false);
+                                    
+                                            e.target.value = "";
+                                        }}
+                                    />
+                                
+                                    <textarea
                                     placeholder="Ask something about your documents..."
                                     value={aiInput}
                                     onChange={(e) =>

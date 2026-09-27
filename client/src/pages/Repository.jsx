@@ -11,6 +11,8 @@ const Repository = () => {
 
     const selectedSession = searchParams.get("session");
     const selectedTermParam = searchParams.get("term");
+
+    const highlightId = searchParams.get("highlight");
     
     const selectedTerm =
         selectedTermParam === "even"
@@ -54,6 +56,29 @@ const Repository = () => {
     useEffect(() => {
         fetchFiles();
     }, [selectedSession, selectedTermParam]);
+
+    useEffect(() => {
+        if (!highlightId || !files.length) return;
+    
+        const element = document.getElementById(
+            `repository-file-${highlightId}`
+        );
+    
+        if (!element) return;
+    
+        element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+        });
+    
+        element.classList.add("repository-highlight");
+    
+        const timer = setTimeout(() => {
+            element.classList.remove("repository-highlight");
+        }, 3000);
+    
+        return () => clearTimeout(timer);
+    }, [files, highlightId]);
 
 
     // =========================
@@ -257,6 +282,7 @@ onChange={(e) => {
                         <div
                             className="repository-card"
                             key={file._id}
+                            id={`repository-file-${file._id}`}
                         >
 
                             {/* CARD HEADER */}
@@ -364,7 +390,18 @@ onChange={(e) => {
                             >
                                 Open
                             </button>
+                            {/* =========================
+                                EDIT BUTTON
+                            ========================= */}
 
+                            <button
+                                className="repository-edit"
+                                onClick={() =>
+                                    setEditingFile(file)
+                                }
+                            >
+                                Edit
+                            </button>
 
                             {/* =========================
                                 DELETE BUTTON
@@ -380,18 +417,7 @@ onChange={(e) => {
                             </button>
 
 
-                            {/* =========================
-                                EDIT BUTTON
-                            ========================= */}
-
-                            <button
-                                className="repository-edit"
-                                onClick={() =>
-                                    setEditingFile(file)
-                                }
-                            >
-                                Edit
-                            </button>
+                           
 
 
                             {/* =========================

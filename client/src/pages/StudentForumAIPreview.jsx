@@ -230,6 +230,11 @@ const updatedContent = content
     .replace(
         /Ref\.\s*No\.\s*:\s*Date\s*:/gi,
         ""
+    )
+        // Convert AI bullet characters into proper Markdown list items
+    .replace(
+        /\s*•\s*/g,
+        "\n- "
     );
 
 
@@ -555,17 +560,18 @@ const finalIssueDate =
                 <div className="rajsioni-body">
 
                     <div className="document-meta">
-                        <div>
+                        <div className="document-meta-left">
                             Ref. No.: {referenceNumber}
-                            <span style={{ marginLeft: "30px" }}>
-                                Date: {finalIssueDate}
-                            </span>
                         </div>
-
-                        <span>
-                            Session {finalSession} — Term: {finalTerm}
-              
-                        </span>
+                    
+                        <div className="document-meta-right">
+                            <div>
+                                Date: {finalIssueDate}
+                            </div>
+                            <div>
+                                Session {finalSession}
+                            </div>
+                        </div>
                     </div>
 
                    <div className="student-forum-notice">
@@ -579,7 +585,7 @@ const finalIssueDate =
                                 <br />
                                 The Campus Director,
                                 <br />
-                                GHRCEM, Nagpur.
+                                GHRCEMN, Nagpur.
                             </p>
                     
                             <p>
@@ -667,55 +673,40 @@ const finalIssueDate =
                     </div>
                 )}
 
-                      {/* ================= FOOTER ================= */}
-                      <div className="rajsioni-footer">
-                      
-                          <div className="footer-text">
-                              <strong>
-                                  G H Raisoni College of Engineering & Management
-                              </strong>
-                      
-                              <p>
-                                  (Formerly Known as G H Raisoni Institute of Engineering &
-                                  Technology, Nagpur)
-                              </p>
-                      
-                              <p>
-                                  An Autonomous Institute Affiliated to Rashtrasant Tukadoji
-                                  Maharaj Nagpur University, Nagpur
-                              </p>
-                      
-                              <p>
-                                  Accredited by NAAC with “A+” Grade
-                              </p>
-                      
-                              <p>
-                                  Shraddha Park, B-37-39/1, MIDC, Hingna-Wadi Link Road,
-                                  Nagpur-440016 (INDIA)
-                              </p>
-                          </div>
-                      
-                          <div className="footer-bottom">
-                      
-                              <img
-                                  src="/raisoni/raisoni-education.png"
-                                  alt="Raisoni Education"
-                                  className="raisoni-education-logo"
-                              />
-                      
-                              <div className="footer-line"></div>
-                      
-                          </div>
-                      
-                          <div className="footer-cities">
-                              Nagpur | Pune | Jalgaon | Amravati | Pandhurna | Bhandara
-                          </div>
-                      
-                      </div>
+
+                        {/* ================= FOOTER ================= */}
+                        
+                        <div className="footer-text-image-wrapper">
+                            <img
+                                src="/raisoni/footer-text.png"
+                                alt="G H Raisoni College Footer Information"
+                                className="footer-text-image"
+                            />
+                        </div>
+                        
+                        <div className="footer-bottom">
+                            <div className="footer-brand">
+                                <img
+                                    src="/raisoni/raisoni-education.png"
+                                    alt="Raisoni Education"
+                                    className="raisoni-education-logo"
+                                />
+                            </div>
+                        
+                            <div className="footer-location">
+                                <div className="footer-orange-line"></div>
+                        
+                                <div className="footer-cities">
+                                    Nagpur | Pune | Jalgaon | Amravati | Pandhurna |
+                                </div>
+                            </div>
+                        </div>
+                                                  
+                      </div> 
 
                 </div>
 
-            </div>
+            
     );
 };
 

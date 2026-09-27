@@ -266,10 +266,92 @@ Give a clear, useful answer.
 
     throw lastError;
 };
+const analyzeUploadedDocument = async (filePath, mimeType, prompt = "") => {
+    const fs = require("fs");
+
+    const fileData = fs.readFileSync(filePath);
+
+    const isImage = mimeType.startsWith("image/");
+
+    const response = await ai.models.generateContent({
+        model: "gemini-3.7-flash",
+        contents: [
+            {
+                role: "user",
+                parts: [
+                    {
+                        text: `
+You are DOCMitra AI, an assistant for college faculty.
+
+The faculty member has uploaded ${
+                            isImage ? "an image" : "a document"
+                        }.
+
+Analyze the uploaded ${
+                            isImage ? "image" : "document"
+                        } and answer the faculty member's instruction accurately.
+
+If no specific instruction is provided, ${
+                            isImage
+                                ? "describe and explain the important information visible in the image."
+                                : "summarize the document clearly."
+                        }
+
+User instruction:
+${prompt || "Analyze this uploaded file and explain the important information clearly."}
+
+Rules:
+
+- Use only information present in the uploaded file.
+- Do not invent facts.
+- Preserve important names, dates, numbers, subjects, and other details.
+- Follow the user's instruction carefully.
+- Give a clear and useful response.
+- Use headings or bullet points when helpful.
+- If the requested information is not present in the file, clearly say that it is not available.
+                        `,
+                    },
+                    {
+                        inlineData: {
+                            mimeType,
+                            data: fileData.toString("base64"),
+                        },
+                    },
+                ],
+            },
+        ],
+    });
+
+    return response.text;
+};
+
+const generateAIImage = async (prompt) => {
+    if (!prompt || !prompt.trim()) {
+        throw new Error("Image prompt is required.");
+    }
+
+    const interaction = await ai.interactions.create({
+        model: "gemini-3.1-flash-image",
+        input: prompt.trim(),
+    });
+
+    const generatedImage = interaction.output_image;
+
+    if (!generatedImage) {
+        throw new Error("Gemini did not return an image.");
+    }
+
+    return {
+        mimeType: generatedImage.mime_type || "image/png",
+        data: generatedImage.data,
+    };
+};
 
 
 module.exports = {
     generateStudentForumDocument,
     editStudentForumDocument,
     chatWithDashboardAI,
+    analyzeUploadedDocument,
+    generateAIImage,
 };

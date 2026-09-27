@@ -5,6 +5,7 @@ const FacultyManagement = () => {
     const [faculty, setFaculty] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [search, setSearch] = useState("");
+    const [facultyFilter, setFacultyFilter] = useState("all");
 
     const [formData, setFormData] = useState({
         name: "",
@@ -97,16 +98,22 @@ const FacultyManagement = () => {
         }
     };
 
-    const filteredFaculty = faculty.filter((member) => {
-        const query = search.toLowerCase();
+const filteredFaculty = faculty.filter((member) => {
+    const query = search.toLowerCase();
 
-        return (
-            member.name?.toLowerCase().includes(query) ||
-            member.email?.toLowerCase().includes(query) ||
-            member.employeeId?.toLowerCase().includes(query) ||
-            member.department?.toLowerCase().includes(query)
-        );
-    });
+    const matchesStatus =
+        facultyFilter === "all" ||
+        (facultyFilter === "active" && member.isActive) ||
+        (facultyFilter === "inactive" && !member.isActive);
+
+    const matchesSearch =
+        member.name?.toLowerCase().includes(query) ||
+        member.email?.toLowerCase().includes(query) ||
+        member.employeeId?.toLowerCase().includes(query) ||
+        member.department?.toLowerCase().includes(query);
+
+    return matchesStatus && matchesSearch;
+});
 
     const totalFaculty = faculty.length;
 
@@ -160,48 +167,65 @@ const FacultyManagement = () => {
 
             {/* ================= STATS ================= */}
 
-            <div className="faculty-stats">
+           <div className="faculty-stats">
 
-                <div className="faculty-stat-card">
-                    <div className="faculty-stat-icon">
-                        👥
-                    </div>
+    {/* TOTAL FACULTY */}
+    <div
+        className={`faculty-stat-card ${
+            facultyFilter === "all" ? "faculty-stat-active" : ""
+        }`}
+        onClick={() => setFacultyFilter("all")}
+    >
+        <div className="faculty-stat-icon">
+            👥
+        </div>
 
-                    <div>
-                        <span>Total Faculty</span>
-                        <strong>{totalFaculty}</strong>
-                        <small>Department faculty</small>
-                    </div>
-                </div>
-
-
-                <div className="faculty-stat-card">
-                    <div className="faculty-stat-icon active">
-                        ✓
-                    </div>
-
-                    <div>
-                        <span>Active Faculty</span>
-                        <strong>{activeFaculty}</strong>
-                        <small>Currently active</small>
-                    </div>
-                </div>
+        <div>
+            <span>Total Faculty</span>
+            <strong>{totalFaculty}</strong>
+            <small>Department faculty</small>
+        </div>
+    </div>
 
 
-                <div className="faculty-stat-card">
-                    <div className="faculty-stat-icon inactive">
-                        ○
-                    </div>
+    {/* ACTIVE FACULTY */}
+    <div
+        className={`faculty-stat-card ${
+            facultyFilter === "active" ? "faculty-stat-active" : ""
+        }`}
+        onClick={() => setFacultyFilter("active")}
+    >
+        <div className="faculty-stat-icon active">
+            ✓
+        </div>
 
-                    <div>
-                        <span>Inactive Faculty</span>
-                        <strong>{inactiveFaculty}</strong>
-                        <small>Access disabled</small>
-                    </div>
-                </div>
+        <div>
+            <span>Active Faculty</span>
+            <strong>{activeFaculty}</strong>
+            <small>Currently active</small>
+        </div>
+    </div>
 
-            </div>
 
+    {/* INACTIVE FACULTY */}
+    <div
+        className={`faculty-stat-card ${
+            facultyFilter === "inactive" ? "faculty-stat-active" : ""
+        }`}
+        onClick={() => setFacultyFilter("inactive")}
+    >
+        <div className="faculty-stat-icon inactive">
+            ○
+        </div>
+
+        <div>
+            <span>Inactive Faculty</span>
+            <strong>{inactiveFaculty}</strong>
+            <small>Access disabled</small>
+        </div>
+    </div>
+
+</div>
 
             {/* ================= ADD FACULTY ================= */}
 

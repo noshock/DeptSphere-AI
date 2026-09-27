@@ -76,11 +76,15 @@ const handleContinue = () => {
                     Choose the document you want to edit with AI.
                 </p>
 
-                <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,.txt"
-                    onChange={handleFileChange}
-                />
+                <label className="document-upload-button">
+                    Choose Document
+                    <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.txt"
+                        onChange={handleFileChange}
+                        hidden
+                    />
+                </label>
 
                 {file && (
                     <p>

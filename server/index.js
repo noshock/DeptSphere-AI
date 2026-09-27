@@ -19,6 +19,8 @@ const repositoryRoutes = require("./routes/RepositoryRoutes");
 const reminderRoutes = require("./routes/reminderRoutes");
 console.log("REMINDER ROUTES LOADED");
 const aiRoutes = require("./routes/aiRoutes");
+const adminAIRoutes = require("./routes/adminAIRoutes");
+const aiUploadRoutes = require("./routes/aiUploadRoutes");
 const studentForumAIRoutes = require("./routes/studentForumAIRoutes");
 const captchaRoutes = require("./routes/captchaRoutes");
 
@@ -71,6 +73,8 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/repository", repositoryRoutes);
 app.use("/api/reminders", reminderRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/admin-ai", adminAIRoutes);
+app.use("/api/ai-upload", aiUploadRoutes);
 app.use(
     "/api/student-forum-ai",
     studentForumAIRoutes
