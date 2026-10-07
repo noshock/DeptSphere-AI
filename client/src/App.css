@@ -5856,7 +5856,7 @@
 
 .dashboard-main {
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 390px !important;
+    grid-template-columns: minmax(0, 1fr) 550px !important;
     gap: 22px !important;
     align-items: stretch !important;
 }
@@ -5943,8 +5943,8 @@
 }
 
 .dashboard-right .ai-message-content {
-    max-width: 82%;
-    font-size: 12px;
+    max-width: 150%;
+    font-size: 13px;
     line-height: 1.55;
 }
 

@@ -437,8 +437,17 @@ if (location.state?.content) {
                     navigate("/student-forum-ai/preview", {
                         state: {
                             content: generatedContent,
-                            title: generatedTitle,
-                            category: generatedCategory,
+                            title:
+                                generatedTitle ||
+                                JSON.parse(sessionStorage.getItem("studentForumDraft") || "{}")
+                                    .generatedTitle ||
+                                "",
+                            
+                            category:
+                                generatedCategory ||
+                                JSON.parse(sessionStorage.getItem("studentForumDraft") || "{}")
+                                    .generatedCategory ||
+                                "",
                             documentType,
                             session,
                             term,
@@ -454,8 +463,17 @@ if (location.state?.content) {
                 navigate("/student-forum-ai/preview", {
                     state: {
                         content: generatedContent,
-                        title: generatedTitle,
-                        category: generatedCategory,
+                        title:
+                            generatedTitle ||
+                            JSON.parse(sessionStorage.getItem("studentForumDraft") || "{}")
+                                .generatedTitle ||
+                            "",
+                        
+                        category:
+                            generatedCategory ||
+                            JSON.parse(sessionStorage.getItem("studentForumDraft") || "{}")
+                                .generatedCategory ||
+                            "",
                         documentType,
                         session,
                         term,

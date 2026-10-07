@@ -37,11 +37,19 @@ const Header = () => {
         fetchProfile();
     }, []);
 
-   useEffect(() => {
-        if (faculty) {
-            fetchNotifications();
-        }
-    }, [faculty]);
+  useEffect(() => {
+
+    if (!faculty) return;
+
+    fetchNotifications();
+
+    const interval = setInterval(() => {
+        fetchNotifications();
+    }, 3000);
+
+    return () => clearInterval(interval);
+
+}, [faculty]);
 
     const unreadCount = reminders.filter(
         (item) => !item.isRead
@@ -51,13 +59,30 @@ const Header = () => {
         ? `http://localhost:5000${faculty.profilePhoto}`
         : null;
 
-const markAllNotificationsRead = () => {
-    setReminders((prev) =>
-        prev.map((item) => ({
-            ...item,
-            isRead: true,
-        }))
-    );
+const markAllNotificationsRead = async () => {
+    try {
+        if (faculty?.role === "admin") {
+            await Promise.all(
+                reminders
+                    .filter((item) => !item.isRead)
+                    .map((item) =>
+                        api.put(`/notifications/${item._id}/read`)
+                    )
+            );
+        } else {
+            await Promise.all(
+                reminders
+                    .filter((item) => !item.isRead)
+                    .map((item) =>
+                        api.put(`/reminders/${item._id}/read`)
+                    )
+            );
+        }
+
+        await fetchNotifications();
+    } catch (error) {
+        console.error("Failed to mark all notifications as read:", error);
+    }
 };
 
     return (

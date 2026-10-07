@@ -19,6 +19,13 @@ const [selectedCategory, setSelectedCategory] = useState(null);
         "Assignment",
         "Other",
     ];
+    const getRepositoryCategory = (category) => {
+        if (category === "Placement") {
+            return "Placement Notice";
+        }
+    
+        return categories.includes(category) ? category : "Other";
+    };
 
     const [searchParams] = useSearchParams();
 
@@ -293,10 +300,10 @@ const handleOpenFile = (fileUrl) => {
                
                                 <p className="repository-category-count">
                                     {files.filter(
-                                        (file) => file.category === category
+                                        (file) => getRepositoryCategory(file.category) === category
                                     ).length}{" "}
                                     {files.filter(
-                                        (file) => file.category === category
+                                        (file) => getRepositoryCategory(file.category) === category
                                     ).length === 1
                                         ? "document"
                                         : "documents"}
@@ -314,7 +321,7 @@ const handleOpenFile = (fileUrl) => {
             files.filter(
                 (file) =>
                     !selectedCategory ||
-                    file.category === selectedCategory
+                    getRepositoryCategory(file.category) === selectedCategory
             ).length === 0 ? (
 
                 <div className="repository-empty">
@@ -342,7 +349,7 @@ const handleOpenFile = (fileUrl) => {
                         .filter(
                             (file) =>
                                 !selectedCategory ||
-                                file.category === selectedCategory
+                                getRepositoryCategory(file.category) === selectedCategory
                         )
                         .map((file) => (
 
