@@ -4075,10 +4075,11 @@
 .uploaded-document-image {
     width: 100%;
     max-width: 100%;
-    margin-top: 15px;
+    margin-top: 20px;
     text-align: center;
     box-sizing: border-box;
     overflow: visible;
+    position: relative;
 }
 
 .uploaded-document-image img {
@@ -9442,4 +9443,172 @@ button.calendar-day:hover {
     height: auto;
     border-radius: 12px;
     margin-top: 6px;
+}
+
+.document-body-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+    table-layout: auto;
+}
+
+.document-body-content th,
+.document-body-content td {
+    border: 1px solid #777;
+    padding: 8px 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.document-body-content th {
+    font-weight: 700;
+    background: #ffffff;
+}
+
+.document-body-content td {
+    font-weight: 400;
+}
+
+.document-body-content th,
+.document-body-content td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* ================================
+   Repository Category Folders
+================================ */
+
+.repository-category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    width: 100%;
+    margin-bottom: 28px;
+}
+
+.repository-category-card {
+    position: relative;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transition: all 0.25s ease;
+    overflow: hidden;
+}
+
+.repository-category-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(
+        90deg,
+        #6c51f2,
+        #cd5be9
+    );
+}
+
+.repository-category-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(108, 81, 242, 0.25);
+    box-shadow: 0 14px 30px rgba(108, 81, 242, 0.14);
+}
+
+.repository-category-icon {
+    width: 62px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    border-radius: 10px;
+    background: linear-gradient(
+        135deg,
+        #eeeaff,
+        #f9eaff
+    );
+    font-size: 30px;
+    box-shadow:
+        inset 0 0 0 1px rgba(108, 81, 242, 0.08);
+    transition: transform 0.25s ease;
+}
+
+.repository-category-card:hover .repository-category-icon {
+    transform: scale(1.08);
+}
+
+.repository-category-card h3 {
+    margin: 0 0 7px;
+    color: #111827;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.repository-category-card p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.repository-category-count {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 20px;
+    background: #f3f0ff;
+    color: #6c51f2 !important;
+    font-size: 11px !important;
+    font-weight: 600;
+}
+.repository-category-card:active {
+    transform: translateY(-2px) scale(0.99);
+}
+
+.repository-category-card {
+    backdrop-filter: blur(6px);
+}
+
+.repository-back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 8px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #6c51f2;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.repository-back-button:hover {
+    background: #f3f0ff;
+    border-color: #cfc4ff;
+    transform: translateX(-2px);
+}
+
+.repository-category-count {
+    box-shadow: 0 2px 6px rgba(108, 81, 242, 0.08);
+    letter-spacing: 0.2px;
+}
+
+@media (max-width: 900px) {
+    .repository-category-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .repository-category-grid {
+        grid-template-columns: 1fr;
+    }
 }

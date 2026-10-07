@@ -623,6 +623,7 @@ const fetchDocuments = async () => {
 
                                         setAiMessages([]);
                                         setAiInput("");
+                                        setGenerateImageMode(false);
                                     }}
                                 >
                                     ↻ New Chat
@@ -863,6 +864,7 @@ const fetchDocuments = async () => {
                                         
                                             setAttachedDocument(file);
                                             setShowAIMenu(false);
+                                            setGenerateImageMode(false);
                                         
                                             e.target.value = "";
                                         }}

@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -20,8 +21,15 @@ const {
     prompt,
     issueDate,
     referenceNumber: passedReferenceNumber,
-    imageData
+    imageData,
+    imageDataList,
+    imagePosition,
 } = location.state || {};
+console.log("PREVIEW IMAGE DATA:", {
+    imageData,
+    imageDataList,
+    imagePosition,
+});
 
 const content =
     typeof rawContent === "string"
@@ -30,8 +38,7 @@ const content =
 
     const [facultyDepartment, setFacultyDepartment] = useState("");
     const [referenceNumber, setReferenceNumber] = useState("");
-    const [imageWidth, setImageWidth] = useState(300);
-    const [imageHeight, setImageHeight] = useState(200);
+    const [imageSizes, setImageSizes] = useState({});
     const referenceRequestStarted = useRef(false);
     
 const extractDateFromPrompt = (text) => {
@@ -267,6 +274,71 @@ const finalTerm =
             </div>
         );
     }
+
+const renderImage = () => {
+    const imagesToRender =
+        imageDataList?.length > 0
+            ? imageDataList
+            : imageData
+                ? [imageData]
+                : [];
+
+    return (
+        <>
+            {imagesToRender.map((imgData, index) => (
+                <div
+                    className="uploaded-document-image"
+                    key={index}
+                >
+                    <Rnd
+                        size={{
+                            width: imageSizes[index]?.width || 300,
+                            height: imageSizes[index]?.height || 200,
+                        }}
+                        style={{
+                            position: "relative",
+                            margin: "20px auto",
+                        }}
+                        lockAspectRatio
+                        minWidth={120}
+                        minHeight={80}
+                        onResize={(e, direction, ref) => {
+                            setImageSizes((prev) => ({
+                                ...prev,
+                                [index]: {
+                                    width: ref.offsetWidth,
+                                    height: ref.offsetHeight,
+                                },
+                            }));
+                        }}
+                        enableResizing={{
+                            top: false,
+                            right: false,
+                            bottom: false,
+                            left: false,
+                            topRight: true,
+                            bottomRight: true,
+                            bottomLeft: true,
+                            topLeft: true,
+                        }}
+                    >
+                        <img
+                            src={imgData}
+                            alt={`Generated document image ${index + 1}`}
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "contain",
+                                display: "block",
+                            }}
+                        />
+                    </Rnd>
+                </div>
+            ))}
+        </>
+    );
+};
+
 
 const handleBackToEdit = () => {
     navigate("/student-forum-ai/create", {
@@ -598,59 +670,35 @@ const finalIssueDate =
                         </div>
                         )}
                     
-                    <div className="document-body-content">
-                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>
-                            {updatedContent}
-                        </ReactMarkdown>
-                    </div>
+                        <div className="document-body-content">
+                            {(() => {
+                                const paragraphs = updatedContent
+                                    .split(/\n\s*\n/)
+                                    .filter((part) => part.trim());
+                        
+                        
+                                return paragraphs.map((paragraph, index) => (
+                                    <React.Fragment key={index}>
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            rehypePlugins={[rehypeRaw]}
+                                        >
+                                            {paragraph}
+                                        </ReactMarkdown>
+                        
+                                        {imagePosition === `after-paragraph-${index + 1}` &&
+                                            renderImage()}
+                                    </React.Fragment>
+                                ));
+                            })()}
+                        
+                            {imagePosition === "end" && renderImage()}
+                        </div>
                     
                     {documentType?.toLowerCase() === "application" && (
                         <p className="application-thanks">
                             Thanking you.
                         </p>
-                    )}
-                                        
-                    {imageData && (
-                        <div className="uploaded-document-image">
-                    <Rnd
-                        size={{
-                            width: imageWidth,
-                            height: imageHeight,
-                        }}
-                        style={{
-                            position: "relative",
-                            margin: "0 auto",
-                        }}
-                        lockAspectRatio
-                        minWidth={120}
-                        minHeight={80}
-                        onResize={(e, direction, ref) => {
-                            setImageWidth(ref.offsetWidth);
-                            setImageHeight(ref.offsetHeight);
-                        }}
-                        enableResizing={{
-                            top: false,
-                            right: false,
-                            bottom: false,
-                            left: false,
-                            topRight: false,
-                            bottomRight: true,
-                            bottomLeft: false,
-                            topLeft: false,
-                        }}
-                    >
-                        <img
-                            src={imageData}
-                            alt="Uploaded document reference"
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "contain",
-                                display: "block",
-                            }}
-                        />
-                    </Rnd>
-                        </div>
                     )}
                 </div>
                 {["report", "application","circular"].includes(

@@ -72,6 +72,40 @@ STRICT RULES:
 18. Use headings, paragraphs, numbered lists, or bullet points where appropriate.
 19. Keep spacing and structure clean and easy to read.
 20. Return ONLY the notice body content.
+21. If the user's request specifically asks to generate, create, add, or include a table, the requested information MUST be returned as a Markdown table.
+
+22. When a table is requested, NEVER represent the table using plain text, spaces, tabs, or aligned headings.
+
+23. A requested table MUST follow this exact Markdown structure:
+
+| Column 1 | Column 2 | Column 3 |
+|---|---|---|
+| Value 1 | Value 2 | Value 3 |
+| Value 4 | Value 5 | Value 6 |
+
+24. The first row MUST contain the column headers.
+
+25. The second row MUST contain the Markdown separator using "---" for every column.
+
+26. Every data row MUST use "|" between every column.
+
+27. Every table row MUST contain exactly the same number of columns as the header row.
+
+28. If multiple pieces of information belong inside one table cell, separate them using the HTML tag "<br>".
+
+29. If the user does NOT request a table and the content does not require tabular presentation, do NOT create a table.
+
+30. All existing rules 1–20 remain unchanged and must continue to be followed.
+
+31. If the user requests an image, illustration, picture, or graphic, do NOT generate or embed any image markup in the document content.
+
+32. NEVER output Markdown image syntax such as ![alt](url), HTML <img> tags, image URLs, base64 image data, or image placeholders.
+
+33. The image will be generated and inserted separately by the application. The document content must contain only the text content that should appear around the image.
+
+34. Do not write placeholders such as "Notice Graphic", "Image", "Insert Image Here", or similar text unless the user explicitly requests such text.
+
+35. All existing rules 1–30 remain unchanged.
 
 The output should look like the MAIN CONTENT of an official notice, not a complete document.
 
@@ -107,6 +141,9 @@ Return valid JSON only.
                 console.log(`Gemini success using: ${model}`);
                 
                 const rawText = response.text.trim();
+
+                console.log("GEMINI RAW DOCUMENT OUTPUT:");
+                console.log(rawText);
                 
                 let parsed;
                 

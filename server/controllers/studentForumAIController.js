@@ -1,6 +1,7 @@
 const {
     generateStudentForumDocument,
     editStudentForumDocument,
+    generateAIImage,
 } = require("../services/geminiService");
 
 const {
@@ -45,12 +46,49 @@ const generateDocument = async (req, res) => {
                 session,
                 term
             );
+             let imageData = null;
+
+                const wantsImage =
+                    /\b(generate|create|make|add|insert)\b.*\b(image|picture|illustration|photo)\b/i.test(
+                        prompt
+                    );
+
+                let imagePosition = "end";
+
+                    if (/below the first paragraph|after the first paragraph/i.test(prompt)) {
+                        imagePosition = "after-paragraph-1";
+                    } else if (/below the second paragraph|after the second paragraph/i.test(prompt)) {
+                        imagePosition = "after-paragraph-2";
+                    } else if (/below the third paragraph|after the third paragraph/i.test(prompt)) {
+                        imagePosition = "after-paragraph-3";
+                    }   
+                
+                if (wantsImage) {
+                    const imagePrompt = `
+                        Create a suitable professional image/illustration for the document described below.
+                        
+                        IMPORTANT:
+                        - Do not invent dates, years, names, event names, venues, numbers, QR codes, logos, or other specific details.
+                        - Do not add any text to the image unless the user explicitly asks for text.
+                        - Keep the image visually relevant to the document topic.
+                        - Use a clean, professional style suitable for a college document.
+                        
+                        Document request:
+                        ${prompt}
+                        `;
+                        
+                        const generatedImage = await generateAIImage(imagePrompt);
+                
+                    imageData = `data:${generatedImage.mimeType};base64,${generatedImage.data}`;
+            }
         
         res.status(200).json({
             success: true,
             content: generatedResult.content,
             title: generatedResult.title,
             category: generatedResult.category,
+            imageData,
+            imagePosition,
         });
 
     } catch (error) {

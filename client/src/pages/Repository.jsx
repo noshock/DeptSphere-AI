@@ -4,8 +4,21 @@ import api from "../services/api";
 
 const Repository = () => {
     const [files, setFiles] = useState([]);
-    const [search, setSearch] = useState("");
-    const [editingFile, setEditingFile] = useState(null);
+const [search, setSearch] = useState("");
+const [editingFile, setEditingFile] = useState(null);
+const [selectedCategory, setSelectedCategory] = useState(null);
+
+    const categories = [
+        "Event",
+        "Holiday Notice",
+        "Placement Notice",
+        "Examination",
+        "Circular",
+        "Report",
+        "Application",
+        "Assignment",
+        "Other",
+    ];
 
     const [searchParams] = useSearchParams();
 
@@ -224,14 +237,14 @@ const handleOpenFile = (fileUrl) => {
                     type="text"
                     placeholder="Search documents by title..."
                     value={search}
-onChange={(e) => {
-    const value = e.target.value;
-    setSearch(value);
-
-    if (!value.trim()) {
-        fetchFiles();
-    }
-}}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setSearch(value);
+                    
+                        if (!value.trim()) {
+                            fetchFiles();
+                        }
+                    }}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             handleSearch();
@@ -249,12 +262,60 @@ onChange={(e) => {
 
             </div>
 
+            {selectedCategory && (
+                <button
+                    className="repository-back-button"
+                    onClick={() => setSelectedCategory(null)}
+                >
+                    ← Back to Categories
+                </button>
+            )}
+
+             
+
+            {/* =========================
+                  CATEGORY FOLDERS
+                ========================= */}
+               
+               {!selectedCategory && (
+                   <div className="repository-category-grid">
+                       {categories.map((category) => (
+                           <div
+                               key={category}
+                               className="repository-category-card"
+                               onClick={() => setSelectedCategory(category)}
+                           >
+                               <div className="repository-category-icon">
+                                   📂
+                               </div>
+               
+                              <h3>{category}</h3>
+               
+                                <p className="repository-category-count">
+                                    {files.filter(
+                                        (file) => file.category === category
+                                    ).length}{" "}
+                                    {files.filter(
+                                        (file) => file.category === category
+                                    ).length === 1
+                                        ? "document"
+                                        : "documents"}
+                                </p>
+                           </div>
+                       ))}
+                   </div>
+              )}
+
 
             {/* =========================
                 EMPTY STATE
             ========================= */}
-
-            {files.length === 0 ? (
+        {selectedCategory && (
+            files.filter(
+                (file) =>
+                    !selectedCategory ||
+                    file.category === selectedCategory
+            ).length === 0 ? (
 
                 <div className="repository-empty">
 
@@ -277,7 +338,13 @@ onChange={(e) => {
 
                 <div className="repository-list">
 
-                    {files.map((file) => (
+                    {files
+                        .filter(
+                            (file) =>
+                                !selectedCategory ||
+                                file.category === selectedCategory
+                        )
+                        .map((file) => (
 
                         <div
                             className="repository-card"
@@ -485,9 +552,10 @@ onChange={(e) => {
 
                 </div>
 
-            )}
-
+           )
+        )}
         </div>
+         
     );
 };
 

@@ -29,8 +29,9 @@ const StudentForumAICreate = () => {
    
    const referenceRequestStarted = useRef(false);
    
-   const [image, setImage] = useState(null);
+   const [images, setImages] = useState([]);
    const [existingImageData, setExistingImageData] = useState(null);
+   const [imagePosition, setImagePosition] = useState("end");
    const [generatedTitle, setGeneratedTitle] = useState("");
    const [generatedCategory, setGeneratedCategory] = useState("");
    const [documentType, setDocumentType] = useState("Notice");
@@ -101,6 +102,7 @@ if (location.state?.content) {
     setIssueDate(location.state.issueDate || "");
     setReferenceNumber(location.state.referenceNumber || "");
     setExistingImageData(location.state.imageData || null);
+    setImagePosition(location.state.imagePosition || "end");
     return;
 }
 
@@ -114,12 +116,12 @@ if (location.state?.content) {
             const data = JSON.parse(savedData);
 
             setPrompt(data.prompt || "");
-setGeneratedContent(data.generatedContent || "");
-setGeneratedTitle(data.generatedTitle || "");
-setGeneratedCategory(data.generatedCategory || "");
-setIssueDate(data.issueDate || "");
-setReferenceNumber(data.referenceNumber || "");
-        } catch (error) {
+            setGeneratedContent(data.generatedContent || "");
+            setGeneratedTitle(data.generatedTitle || "");
+            setGeneratedCategory(data.generatedCategory || "");
+            setIssueDate(data.issueDate || "");
+            setReferenceNumber(data.referenceNumber || "");
+          } catch (error) {
             console.error(
                 "Error loading saved draft:",
                 error
@@ -174,6 +176,14 @@ setReferenceNumber(data.referenceNumber || "");
                 response.data.category
             );
 
+            setExistingImageData(
+                response.data.imageData || null
+            );
+
+            setImagePosition(
+                response.data.imagePosition || "end"
+            );
+
             const dateMatch = prompt.match(
                 /\b(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december)\b/i
             );
@@ -225,6 +235,7 @@ setReferenceNumber(data.referenceNumber || "");
                     generatedContent: response.data.content,
                     generatedTitle: response.data.title,
                     generatedCategory: response.data.category,
+                    imageData: response.data.imageData || null,
                     session,
                     term,
                     issueDate: extractedIssueDate,
@@ -357,11 +368,12 @@ setReferenceNumber(data.referenceNumber || "");
         <input
             type="file"
             accept="image/png,image/jpeg,image/jpg,image/webp"
+            multiple
             onChange={(e) => {
-                const selectedImage = e.target.files[0];
-
-                if (selectedImage) {
-                    setImage(selectedImage);
+                const selectedImages = Array.from(e.target.files);
+            
+                if (selectedImages.length > 0) {
+                    setImages(selectedImages);
                 }
             }}
             hidden
@@ -372,28 +384,34 @@ setReferenceNumber(data.referenceNumber || "");
         Optional
     </span>
 
-    {image && (
-        <div className="selected-image">
+{images.length > 0 && (
+    <div className="selected-images">
+        {images.map((img, index) => (
+            <div className="selected-image" key={index}>
+                <img
+                    src={URL.createObjectURL(img)}
+                    alt={`Selected ${index + 1}`}
+                />
 
-            <img
-                src={URL.createObjectURL(image)}
-                alt="Selected"
-            />
+                <div className="selected-image-info">
+                    <strong>{img.name}</strong>
 
-            <div className="selected-image-info">
-                <strong>{image.name}</strong>
-
-                <button
-                    type="button"
-                    className="remove-image-button"
-                    onClick={() => setImage(null)}
-                >
-                    Remove
-                </button>
+                    <button
+                        type="button"
+                        className="remove-image-button"
+                        onClick={() => {
+                            setImages(
+                                images.filter((_, i) => i !== index)
+                            );
+                        }}
+                    >
+                        Remove
+                    </button>
+                </div>
             </div>
-
-        </div>
-    )}
+        ))}
+    </div>
+)}
 
 </div>
 
@@ -403,31 +421,20 @@ setReferenceNumber(data.referenceNumber || "");
         type="button"
         className="primary-button"
         onClick={() => {
-if (image) {
-    const reader = new FileReader();
-
-    reader.onloadend = () => {
-        navigate("/student-forum-ai/preview", {
-            state: {
-                content: generatedContent,
-                title: generatedTitle,
-                category: generatedCategory,
-                documentType,
-                session,
-                term,
-                prompt,
-                issueDate,
-                referenceNumber,
-                imageData: reader.result,
-            },
-        });
-    };
-
-    reader.readAsDataURL(image);
-} else {
-                navigate(
-                    "/student-forum-ai/preview",
-                    {
+            if (images.length > 0) {
+                const readers = images.map((img) => {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+        
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+        
+                        reader.readAsDataURL(img);
+                    });
+                });
+        
+                Promise.all(readers).then((imageDataList) => {
+                    navigate("/student-forum-ai/preview", {
                         state: {
                             content: generatedContent,
                             title: generatedTitle,
@@ -438,10 +445,29 @@ if (image) {
                             prompt,
                             issueDate,
                             referenceNumber,
-                            imageData: null,
+                            imageDataList,
+                            imagePosition,
                         },
-                    }
-                );
+                    });
+                });
+            } else {
+                navigate("/student-forum-ai/preview", {
+                    state: {
+                        content: generatedContent,
+                        title: generatedTitle,
+                        category: generatedCategory,
+                        documentType,
+                        session,
+                        term,
+                        prompt,
+                        issueDate,
+                        referenceNumber,
+                        imageDataList: existingImageData
+                            ? [existingImageData]
+                            : [],
+                        imagePosition,
+                    },
+                });
             }
         }}
     >
