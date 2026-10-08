@@ -9612,3 +9612,7 @@ button.calendar-day:hover {
         grid-template-columns: 1fr;
     }
 }
+
+.application-thanks {
+    font-size: 13px !important;
+}

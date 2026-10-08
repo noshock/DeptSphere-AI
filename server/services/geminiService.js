@@ -127,11 +127,26 @@ Rules for title:
 - Do not use Session or Term as metadata.
 
 Rules for category:
+
 - Classify the document based on its actual content.
-- Use a concise professional category such as:
-  "Holiday Notice", "Examination", "Assignment", "Meeting Notice",
-  "Event", "Student Forum", "Academic Notice", "General Notice",
-  or another appropriate category when necessary.
+- The category MUST be exactly ONE of the following values:
+  "Event"
+  "Holiday Notice"
+  "Placement Notice"
+  "Examination"
+  "Circular"
+  "Report"
+  "Application"
+  "Assignment"
+  "Other"
+
+- NEVER return any category outside this list.
+- NEVER return "General Notice", "Meeting Notice", "Academic Notice",
+  "Student Forum", "Placement", or any other category not listed above.
+- If the document does not clearly match any of the listed categories,
+  return "Other".
+- Return the category exactly as written above, including capitalization
+  and spacing.
 
 Do not put JSON inside markdown code fences.
 Return valid JSON only.
